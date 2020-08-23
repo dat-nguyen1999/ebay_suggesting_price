@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Suggesting Rules Form View  -->
+         <record id="suggesting_rules_form_view" model="ir.ui.view">
+            <field name="name">ebay listing</field>
+            <field name="model">ebay_listing</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <button name="update_current_price" type='object' string='Reprice' class="btn btn-success"   />
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1 class="text-primary">
+                                <b>
+                                    <field name="ebay_title" placeholder="e.g. Nobody's Boy" />
+                                </b>
+                            </h1>
+                        </div>
+                        <group >
+                            <group colspan="2">
+                                <group>
+                                    <field name="ebay_itemId" />
+                                    <field name="ebay_category_id" options="{'no_create': True, 'no_open': True}"/>
+                                    <field name="ebay_URL" />
+                                </group>
+                                <group string="Images">
+                                    <field name="ebay_listing_image"  widget="image" width="90px" height="90px"/>
+                                </group>
+                                <group>
+                                    <field name="ebay_listing_type"/>
+                                    <field name="ebay_current_price"/>
+                                    <field name="ebay_competition_price"/>
+                                    <field name="ebay_min_price"/>
+                                    <field name="ebay_max_price"/>
+                                    <field name="ebay_automated_pricing"/>
+                                    <field name="ebay_repricer"/>
+                                    <field name="ebay_instock"/>
+                                </group>
+
+                                <group>
+                                    <field name="ebay_ePID"/>
+                                    <field name="ebay_ISBN"/>
+                                    <field name="ebay_UPC"/>
+                                    <field name="ebay_EAN"/>
+                                </group>
+                            </group>
+                        </group>
+                    </sheet>
+                    <footer>
+                        <!--                        <record id="history_price_tree_view" model="ir.ui.view">-->
+                        <!--                            <field name="name">ebay_history_price.tree.view</field>-->
+                        <!--                            <field name="model">ebay_history_price</field>-->
+                        <!--                            <field name="arch" type="xml">-->
+                        <!--                                <tree string="History Price" default_order="create_date desc">-->
+                        <!--                                    <field name="create_date" />-->
+                        <!--                                    <field name="ebay_price"/>-->
+                        <!--                                </tree>-->
+                        <!--                            </field>-->
+                        <!--                        </record>-->
+                        <div>
+                            <h1>
+                                DAT
+                            </h1>
+
+                        </div>
+                    </footer>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="activity_ids" widget="mail_activity"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+         <!-- Suggesting Rules Tree View  -->
+        <record id="suggesting_rules_tree_view" model="ir.ui.view">
+            <field name="name">ebay_suggesting_rules.tree.view</field>
+            <field name="model">ebay_suggesting_rules</field>
+            <field name="arch" type="xml">
+                <tree string="Suggesting Rules" default_order="create_date desc">
+                    <field name="ebay_interval"/>
+                    <field name="ebay_rule_name"/>
+                    <field name="ebay_suggesting_strategy"/>
+                    <field name="ebay_amount_type"/>
+                    <field name="ebay_amount_value"/>
+                    <field name="ebay_top_rate_option"  class="d-flex flex-row-reverse" />
+                </tree>
+            </field>
+        </record>
+
+        <!-- Suggesting Rules Kanban View  -->
+        <record model="ir.ui.view" id="listing_kanban_view">
+            <field name="name">ebay_listing.kanban.view</field>
+            <field name="model">ebay_listing</field>
+            <field name="arch" type="xml">
+                <kanban>
+                    <field name="id"/>
+                    <field name="ebay_title"/>
+                    <field name="ebay_category_id"/>
+                    <field name="ebay_listing_type"/>
+                    <field name="ebay_current_price"/>
+                    <field name="ebay_min_price"/>
+                    <field name="ebay_max_price"/>
+                    <field name="ebay_automated_pricing" />
+                    <field name="ebay_ePID"/>
+                    <field name="ebay_ISBN"/>
+                    <field name="ebay_UPC"/>
+                    <field name="ebay_EAN"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div t-attf-class="oe_kanban_global_click">
+                                <div class="o_kanban_image">
+                                    <img alt="Listing's Image"
+                                         t-att-src="kanban_image('ebay_listing', 'ebay_listing_image',record.id.raw_value)"/>
+                                </div>
+                                <div class="oe_kanban_details">
+                                    <t class="o_kanban_record_title">
+                                        <strong t-esc="record.ebay_title.value"/>
+                                    </t>
+                                    <div t-if="record.ebay_current_price.value">
+                                        <t t-esc="record.ebay_current_price.value"/>
+                                    </div>
+                                    <span t-if ="record.ebay_automated_pricing">Automated</span>
+                                    <div t-if="record.ebay_listing_type" >
+                                        <t t-esc="record.ebay_listing_type.value"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+    </data>
+</odoo>
