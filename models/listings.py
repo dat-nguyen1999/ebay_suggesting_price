@@ -51,7 +51,7 @@ class Listings(models.Model):
     ebay_itemId = fields.Char("ItemID", size=12)
     ebay_title = fields.Char('Title', size=80,
                              help='The title is restricted to 80 characters', required=True)
-    ebay_URL = fields.Html('eBay URL', default='<p><br></p>')
+    ebay_URL = fields.Html('URL', default='<p><br></p>')
     ebay_listing_image = fields.Image("Listing Image", attachment=True)
     ebay_category_id = fields.Many2one('ebay.category',
                                        string="Category",
@@ -65,10 +65,10 @@ class Listings(models.Model):
     ebay_EAN = fields.Char("EAN", size=13)
     ebay_UPC = fields.Char("UPC", size=13)
 
-    ebay_current_price = fields.Float('eBay Current Price')
-    ebay_competition_price = fields.Float('eBay Competition Price', required=True)
-    ebay_min_price = fields.Float('eBay Minimum Price', required=True)
-    ebay_max_price = fields.Float('eBay Maximum Price', required=True)
+    ebay_current_price = fields.Float('Current Price')
+    ebay_competition_price = fields.Float('Competition Price', required=True)
+    ebay_min_price = fields.Float('Minimum Price', required=True)
+    ebay_max_price = fields.Float('Maximum Price', required=True)
     ebay_automated_pricing = fields.Boolean("Automated Pricing", required=True)
     ebay_repricer = fields.Char("Repricing Rules")
     ebay_instock = fields.Integer("In stock")
