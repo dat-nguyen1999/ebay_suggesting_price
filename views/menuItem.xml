@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <menuitem
+                id="ebay_suggesting_price__menu_root"
+                name="eBay Suggesting Price"
+                groups="base.group_user"
+        />
+
+        <menuitem id="listings_menu"
+                  name="Listings"
+                  parent="ebay_suggesting_price__menu_root"
+                  sequence = '1'
+                  action="action_ebay_product_listing_1"
+        />
+
+        <menuitem id="rules_menu"
+                  name="Rules"
+                  parent="ebay_suggesting_price__menu_root"
+                  sequence = '2'
+                  action="action_ebay_rules"
+        />
+
+
+        <menuitem id="configuration_menu"
+                  name="Configuration"
+                  parent="ebay_suggesting_price__menu_root"
+                  action="action_ebay_product_listing_1"
+                  sequence = '3'
+                  groups="base.group_user"/>
+
+        <menuitem id="configuration_settings"
+                  name="Settings"
+                  parent="configuration_menu"
+                  action="action_ebay_product_listing_1"
+                  groups="base.group_user"/>
+    </data>
+</odoo>

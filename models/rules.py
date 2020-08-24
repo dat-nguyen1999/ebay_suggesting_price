@@ -35,6 +35,7 @@ from odoo import models, fields, api
 #     ebay_amount_value = fields.Float('Amount value', required = True)
 #     ebay_top_rate_option = fields.Boolean("Top rate option")
 class Suggesting_Rules(models.Model):
+    _inherit = ["mail.thread", "mail.activity.mixin"]
     _name = "ebay_suggesting_rules"
     _description = "suggesting rules model"
 
@@ -51,6 +52,7 @@ class Suggesting_Rules(models.Model):
     ebay_amount_value = fields.Float('Amount value', required = True)
     ebay_top_rate_option = fields.Boolean("Top rate option")
 
+    ebay_listings = fields.One2many("ebay_listing", "ebay_repricer")
 
     @api.depends('ebay_suggesting_strategy','ebay_amount_type','ebay_amount_value')
     def _set_ebay_rule_name(self):

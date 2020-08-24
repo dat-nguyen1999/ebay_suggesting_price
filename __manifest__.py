@@ -13,7 +13,9 @@
     'external_dependencies': {'python': ['ebaysdk']},
     'data': [
         'security/ir.model.access.csv',
-        'views/ebay_suggesting_repricer_views.xml',
+        'views/suggesting_price.xml',
+        'views/rules.xml',
+        'views/menuItem.xml',
     ], # liên quan đến view, các file xml
     # 'qweb': ['static/src/xml/*.xml'],
     'installable': True,    # cài đặt được

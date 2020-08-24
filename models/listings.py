@@ -52,28 +52,29 @@ class Listings(models.Model):
     ebay_title = fields.Char('Title', size=80,
                              help='The title is restricted to 80 characters', required=True)
     ebay_URL = fields.Html('URL', default='<p><br></p>')
-    ebay_listing_image = fields.Image("Listing Image", attachment=True)
+    ebay_listing_image = fields.Image("Listing Image",attachment = True)
     ebay_category_id = fields.Many2one('ebay.category',
                                        string="Category",
                                        domain=[('category_type', '=', 'ebay'), ('leaf_category', '=', True)])
     #ebay_listing_type = fields.Char("Listing Type", required=True)
-    ebay_listing_type = fields.Selection([
-                #('Chinese', 'Auction'),
-                ('FixedPriceItem', 'Fixed price')], string='Listing Type', default='FixedPriceItem')
+    # ebay_listing_type = fields.Selection([
+    #             #('Chinese', 'Auction'),
+    #             ('FixedPriceItem', 'Fixed price')], string='Listing Type', default='FixedPriceItem')
     ebay_ePID = fields.Char("ePID", size=13)
     ebay_ISBN = fields.Char("ISBN", size = 13)
     ebay_EAN = fields.Char("EAN", size=13)
     ebay_UPC = fields.Char("UPC", size=13)
 
     ebay_current_price = fields.Float('Current Price')
+    ebay_suggesting_price = fields.Float('Suggesting Price')
     ebay_competition_price = fields.Float('Competition Price', required=True)
     ebay_min_price = fields.Float('Minimum Price', required=True)
     ebay_max_price = fields.Float('Maximum Price', required=True)
     ebay_automated_pricing = fields.Boolean("Automated Pricing", required=True)
-    ebay_repricer = fields.Char("Repricing Rules")
     ebay_instock = fields.Integer("In stock")
 
-    itemIDs = fields.One2many("ebay_listing.item", "listId")
+    itemIDs = fields.One2many("ebay_listing.item", "listId" )    # , readonly =True
+    ebay_repricer = fields.Many2one("ebay_suggesting_rules","Repricing Rules")
 
     def update_current_price(self):
         return "======================================================="
@@ -83,8 +84,9 @@ class ListingItems(models.Model):
     _name = "ebay_listing.item"
     _description = "ebay_listing_item model"
 
-    listId = fields.Many2one("ebay_listing", "Listing Id")
-    price = fields.Float("Price")
+    listId = fields.Many2one("ebay_listing", "Listing Id" )
+    price = fields.Float("Suggesting Price" )
+    s_competitor = fields.Float("Super Competitor")
 
 #     ebay_id = fields.Char('eBay ID', copy=False)
 #     ebay_use = fields.Boolean('Use eBay', default=False)
