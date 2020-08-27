@@ -32,7 +32,7 @@
                   action="action_ebay_rules"
         />
 
-
+        <!-- Menuitem Configurations  -->
         <menuitem id="configuration_menu"
                   name="Configuration"
                   parent="ebay_suggesting_price_menu_root"
@@ -40,6 +40,7 @@
                   sequence = '3'
                   groups="base.group_user"/>
 
+        <!-- Sub-menu Settings for menuitem Configurations -->
         <menuitem id="configuration_settings"
                   name="Settings"
                   parent="configuration_menu"

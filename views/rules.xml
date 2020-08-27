@@ -55,8 +55,9 @@
             <field name="model">ebay_suggesting_rules</field>
             <field name="arch" type="xml">
                 <tree string="Suggesting Rules" default_order="create_date desc">
-                    <field name="ebay_interval"/>
+                    
                     <field name="ebay_rule_name"/>
+                    <field name="ebay_interval"/>
                     <field name="ebay_suggesting_strategy"/>
                     <field name="ebay_amount_type"/>
                     <field name="ebay_amount_value"/>
@@ -72,8 +73,9 @@
             <field name="arch" type="xml">
                 <kanban>
                     <field name="id"/>
-                    <field name="ebay_interval"/>
+                    
                     <field name="ebay_rule_name"/>
+                    <field name="ebay_interval"/>
                     <field name="ebay_suggesting_strategy"/>
                     <field name="ebay_amount_type"/>
                     <field name="ebay_amount_value"/>

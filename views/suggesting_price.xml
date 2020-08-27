@@ -57,7 +57,7 @@
                                     <field name="ebay_EAN"/>
                                 </group>
                             </pages>
-                            <pages string="Historical Price">
+                            <pages string="History">
                                 <field name="itemIDs">
                                     <tree>
                                         <field name="create_date"/>
