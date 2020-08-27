@@ -47,8 +47,7 @@ class Listings(models.Model):
     _name = "ebay_listing"
     _description = "ebay_listing model"
 
-
-    ebay_itemId = fields.Char("ItemID", size=12)
+    itemId = fields.Char("ItemID",required=True, copy=False)  #readonly = True
     ebay_title = fields.Char('Title', size=80,
                              help='The title is restricted to 80 characters', required=True)
     ebay_URL = fields.Html('URL', default='<p><br></p>')
@@ -76,6 +75,12 @@ class Listings(models.Model):
     itemIDs = fields.One2many("ebay_listing.item", "listId" )    # , readonly =True
     ebay_repricer = fields.Many2one("ebay_suggesting_rules","Repricing Rules")
 
+    def name_get(self):
+        result = []
+        for rec in self:
+            result.append((rec.id, rec.itemId))
+        return result
+
     def update_current_price(self):
         return "======================================================="
 
@@ -86,6 +91,7 @@ class ListingItems(models.Model):
 
     listId = fields.Many2one("ebay_listing", "Listing Id" )
     price = fields.Float("Suggesting Price" )
+    current_price = fields.Float("Current Price")
     s_competitor = fields.Float("Super Competitor")
 
 #     ebay_id = fields.Char('eBay ID', copy=False)

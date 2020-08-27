@@ -3,7 +3,7 @@
     <data>
         <!-- Listing Form View  -->
         <record id="listing_form_view" model="ir.ui.view">
-            <field name="name">ebay listing</field>
+            <field name="name">ebay_isting.form.view</field>
             <field name="model">ebay_listing</field>
             <field name="arch" type="xml">
                 <form>
@@ -22,56 +22,55 @@
                         <group >
                             <group colspan="2">
                                 <group>
-                                    <field name="ebay_itemId" />
                                     <field name="ebay_category_id" options="{'no_create': True, 'no_open': True}"/>
                                     <field name="ebay_URL" />
                                 </group>
                                 <group>
                                     <field name="ebay_listing_image"  widget="image" width="90px" height="90px"/>
-
-
-                                </group>
-                                <group>
-
-                                    <field name="ebay_suggesting_price"/>
-                                    <field name="ebay_current_price"/>
-                                    <field name="ebay_competition_price"/>
-                                    <field name="ebay_min_price"/>
-                                    <field name="ebay_max_price"/>
-                                    <field name="ebay_automated_pricing"/>
-                                    <field name="ebay_repricer">
-                                        <field name="ebay_rule_name" />
-                                    </field>
-                                    <field name="ebay_instock"/>
                                 </group>
 
+                            </group>
+                        </group>
+                        <notebook>
+                            <pages string="Price">
+                                <group colspan="2">
+                                    <group>
+                                        <field name="ebay_suggesting_price"/>
+                                        <field name="ebay_current_price"/>
+                                        <field name="ebay_competition_price"/>
+                                        <field name="ebay_min_price"/>
+                                        <field name="ebay_max_price"/>
+                                    </group>
+                                    <group>
+                                        <field name="ebay_automated_pricing"/>
+                                        <field name="ebay_repricer"/>
+                                        <field name="ebay_instock"/>
+                                    </group>
+
+                                </group>
+                            </pages>
+                            <pages string="Barcode">
                                 <group>
                                     <field name="ebay_ePID"/>
                                     <field name="ebay_ISBN"/>
                                     <field name="ebay_UPC"/>
                                     <field name="ebay_EAN"/>
-                                    <field name="itemIDs">
-                                        <tree>
-                                            <field name="create_date"/>
-                                            <field name="price"/>
-                                            <field name="s_competitor"/>
-                                        </tree>
-                                    </field>
                                 </group>
-                            </group>
-                        </group>
+                            </pages>
+                            <pages string="Historical Price">
+                                <field name="itemIDs">
+                                    <tree>
+                                        <field name="create_date"/>
+                                        <field name="price"/>
+                                        <field name="current_price"/>
+                                        <field name="s_competitor"/>
+                                    </tree>
+                                </field>
+                            </pages>
+                        </notebook>
                     </sheet>
                     <footer>
-                        <!--                        <record id="history_price_tree_view" model="ir.ui.view">-->
-                        <!--                            <field name="name">ebay_history_price.tree.view</field>-->
-                        <!--                            <field name="model">ebay_history_price</field>-->
-                        <!--                            <field name="arch" type="xml">-->
-                        <!--                                <tree string="History Price" default_order="create_date desc">-->
-                        <!--                                    <field name="create_date" />-->
-                        <!--                                    <field name="ebay_price"/>-->
-                        <!--                                </tree>-->
-                        <!--                            </field>-->
-                        <!--                        </record>-->
+
                         <div>
                             <h1>
                                 DAT
@@ -94,7 +93,6 @@
             <field name="model">ebay_listing</field>
             <field name="arch" type="xml">
                 <tree string="Listing" default_order="create_date desc">
-                    <field name="ebay_itemId" />
                     <field name="ebay_title"/>
                     <field name="ebay_category_id"/>
                     <field name="ebay_repricer"/>
@@ -154,7 +152,7 @@
         </record>
 
         <!-- List Action-->
-        <record id="action_ebay_product_listing_1" model="ir.actions.act_window">
+        <record id="action_ebay_product_listing" model="ir.actions.act_window">
             <field name="name">eBay Product Listings </field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">ebay_listing</field>

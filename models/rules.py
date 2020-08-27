@@ -61,3 +61,10 @@ class Suggesting_Rules(models.Model):
                 rec.ebay_rule_name = dict(rec._fields['ebay_suggesting_strategy'].selection).get(rec.ebay_suggesting_strategy) + ' ' + str(rec.ebay_amount_value) + ' ' + dict(rec._fields['ebay_amount_type'].selection).get(rec.ebay_amount_type)
             else:
                 rec.ebay_rule_name = dict(rec._fields['ebay_suggesting_strategy'].selection).get(rec.ebay_suggesting_strategy)
+
+    def name_get(self):
+        result = []
+        for rec in self:
+            result.append((rec.id, rec.ebay_rule_name))
+        return result
+

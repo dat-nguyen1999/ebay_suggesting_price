@@ -1,22 +1,33 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
     <data>
+<!--        <record id="action_dashboard" model="ir.actions.act_window">-->
+<!--            <field name="name">eBay Suggesting Price</field>-->
+<!--            <field name="type">ir.actions.act_window</field>-->
+<!--            <field name="view_mode">kanban,tree,form,activity</field>-->
+<!--            <field name="res_model">ebay_listing</field>-->
+<!--            &lt;!&ndash; <field name="view_type">form</field> &ndash;&gt; &lt;!&ndash; Odoo 13 has removed this field &ndash;&gt;-->
+<!--            <field name="view_ids" eval="[(5, 0, 0),-->
+<!--                (0, 0, {'view_mode': 'tree', 'view_id': ref('listing_tree_view')}),-->
+<!--                (0, 0, {'view_mode': 'form', 'view_id': ref('listing_form_view')}),-->
+<!--                (0, 0, {'view_mode': 'kanban', 'view_id': ref('listing_kanban_view')})]"/>-->
+<!--        </record>-->
         <menuitem
-                id="ebay_suggesting_price__menu_root"
+                id="ebay_suggesting_price_menu_root"
                 name="eBay Suggesting Price"
                 groups="base.group_user"
         />
 
         <menuitem id="listings_menu"
                   name="Listings"
-                  parent="ebay_suggesting_price__menu_root"
+                  parent="ebay_suggesting_price_menu_root"
                   sequence = '1'
-                  action="action_ebay_product_listing_1"
+                  action="action_ebay_product_listing"
         />
 
         <menuitem id="rules_menu"
                   name="Rules"
-                  parent="ebay_suggesting_price__menu_root"
+                  parent="ebay_suggesting_price_menu_root"
                   sequence = '2'
                   action="action_ebay_rules"
         />
@@ -24,15 +35,15 @@
 
         <menuitem id="configuration_menu"
                   name="Configuration"
-                  parent="ebay_suggesting_price__menu_root"
-                  action="action_ebay_product_listing_1"
+                  parent="ebay_suggesting_price_menu_root"
+                  action="action_ebay_product_listing"
                   sequence = '3'
                   groups="base.group_user"/>
 
         <menuitem id="configuration_settings"
                   name="Settings"
                   parent="configuration_menu"
-                  action="action_ebay_product_listing_1"
+                  action="action_ebay_product_listing"
                   groups="base.group_user"/>
     </data>
 </odoo>
