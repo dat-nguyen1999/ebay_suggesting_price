@@ -15,6 +15,7 @@
         'security/ir.model.access.csv',
         'views/suggesting_price.xml',
         'views/rules.xml',
+        'views/ebay_settings.xml',
         'views/menuItem.xml',
     ], # liên quan đến view, các file xml
     # 'qweb': ['static/src/xml/*.xml'],

@@ -75,6 +75,44 @@ class Listings(models.Model):
     itemIDs = fields.One2many("ebay_listing.item", "listId" )    # , readonly =True
     ebay_repricer = fields.Many2one("ebay_suggesting_rules","Repricing Rules")
 
+
+    #### Constraints######
+    @api.constrains('itemId')
+    def _check_itemId_unique(self):
+        dict_itemId = { }
+        for record in self:
+            if dict_itemId.get(record.itemId):
+                raise ValidationError("Fields itemId already exists!")
+            dict_itemId[record.itemId] = True
+
+    @api.constrains('ebay_min_price')
+    def _check_negative_min_price(self):
+        for record in self:
+            if record.ebay_min_price < 0:
+                raise ValidationError("Min price cannot be negative")
+
+    @api.constrains('ebay_max_price')
+    def _check_negative_max_price(self):
+        for record in self:
+            if record.ebay_max_price < 0:
+                raise ValidationError("Max price cannot be negative")
+
+    @api.constrains('ebay_instock')
+    def _check_negative_instock(self):
+        for record in self:
+            if record.ebay_instock < 0:
+                raise ValidationError("Instock cannot be negative")
+
+    @api.constrains('ebay_min_price', 'ebay_max_price')
+    def _check_min_max_price(self):
+        for record in self:
+            if record.ebay_min_price > record.ebay_max_price:
+                raise ValidationError("Min price must be smaller than Max price")
+
+    _sql_constraints = [
+        ('itemId_unique', 'unique(itemId)', "itemId already exists!")
+    ]
+
     def name_get(self):
         result = []
         for rec in self:

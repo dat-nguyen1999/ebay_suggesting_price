@@ -36,14 +36,13 @@
         <menuitem id="configuration_menu"
                   name="Configuration"
                   parent="ebay_suggesting_price_menu_root"
-                  action="action_ebay_product_listing"
                   sequence = '3'
                   groups="base.group_user"/>
 
         <menuitem id="configuration_settings"
                   name="Settings"
                   parent="configuration_menu"
-                  action="action_ebay_product_listing"
+                  action="action_ebay_settings"
                   groups="base.group_user"/>
     </data>
 </odoo>

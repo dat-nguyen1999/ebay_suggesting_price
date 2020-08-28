@@ -17,49 +17,49 @@ from ebaysdk.finding import Connection as Finding
 class Finding(Finding):
     pass
 
-# def smart_encode_request_data(value):
-#     try:
-#         if sys.version_info[0] < 3:
-#             return value
-#
-#         # Odoo: This line got fixed
-#         if isinstance(value,str):
-#             return value.encode('utf-8')
-#         else:
-#             return value
-#
-#     except UnicodeDecodeError:
-#         return value
-#
-#
-# class Trading(Connection):
-#     def build_request(self, verb, data, verb_attrs, files=None):
-#         self.verb = verb
-#         self._request_dict = data
-#         self._request_id = uuid.uuid4()
-#
-#         url = self.build_request_url(verb)
-#
-#         headers = self.build_request_headers(verb)
-#         headers.update({'User-Agent': UserAgent,
-#                         'X-EBAY-SDK-REQUEST-ID': str(self._request_id)})
-#
-#         # if we are adding files, we ensure there is no Content-Type header already defined
-#         # otherwise Request will use the existing one which is likely not to be multipart/form-data
-#         # data must also be a dict so we make it so if needed
-#
-#         requestData = self.build_request_data(verb, data, verb_attrs)
-#         if files:
-#             del(headers['Content-Type'])
-#             # Odoo: This line got fixed
-#             if isinstance(requestData, str):  # pylint: disable-msg=E0602
-#                 requestData = {'XMLPayload': requestData}
-#
-#         request = Request(self.method,
-#                           url,
-#                           data=smart_encode_request_data(requestData),
-#                           headers=headers,
-#                           files=files,
-#                           )
-#
-#         self.request = request.prepare()
+def smart_encode_request_data(value):
+    try:
+        if sys.version_info[0] < 3:
+            return value
+
+        # Odoo: This line got fixed
+        if isinstance(value,str):
+            return value.encode('utf-8')
+        else:
+            return value
+
+    except UnicodeDecodeError:
+        return value
+
+
+class Trading(Trading):
+    def build_request(self, verb, data, verb_attrs, files=None):
+        self.verb = verb
+        self._request_dict = data
+        self._request_id = uuid.uuid4()
+
+        url = self.build_request_url(verb)
+
+        headers = self.build_request_headers(verb)
+        headers.update({'User-Agent': UserAgent,
+                        'X-EBAY-SDK-REQUEST-ID': str(self._request_id)})
+
+        # if we are adding files, we ensure there is no Content-Type header already defined
+        # otherwise Request will use the existing one which is likely not to be multipart/form-data
+        # data must also be a dict so we make it so if needed
+
+        requestData = self.build_request_data(verb, data, verb_attrs)
+        if files:
+            del(headers['Content-Type'])
+            # Odoo: This line got fixed
+            if isinstance(requestData, str):  # pylint: disable-msg=E0602
+                requestData = {'XMLPayload': requestData}
+
+        request = Request(self.method,
+                          url,
+                          data=smart_encode_request_data(requestData),
+                          headers=headers,
+                          files=files,
+                          )
+
+        self.request = request.prepare()

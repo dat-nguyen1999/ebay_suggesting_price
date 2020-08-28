@@ -14,21 +14,27 @@
                         <div class="oe_title">
                             <h1 class="text-primary">
                                 <b>
-                                    <field name="ebay_rule_name" placeholder="e.g. Below 1$" />
+                                    <field name="rname" placeholder="e.g. Below 1$" />
                                 </b>
                             </h1>
                         </div>
                         <group >
                             <group colspan="2">
-                                <group>
+                                <h2>
+                                    <group>
+                                    <field name="ebay_suggesting_strategy" style="font-weight: bold;"/>
+                                    <field name="ebay_amount_type" style="font-weight: bold;" attrs="{'readonly':[('ebay_suggesting_strategy','=','matching')]}"/>
+                                    <field name="ebay_amount_value" style="font-weight: bold;" attrs="{'readonly':[('ebay_suggesting_strategy','=','matching')]}"/>
+                                </group>
+                                </h2>
+                                <h2>
+                                    <group>
                                     <field name="ebay_interval" />
-                                    <field name="ebay_suggesting_strategy"/>
-                                    <field name="ebay_amount_type" />
-                                    <field name="ebay_amount_value" />
                                     <field name="ebay_top_rate_option" />
                                 </group>
-
-                                <group>
+                                </h2>
+                            </group>
+                             <group>
                                     <field name="ebay_listings">
                                         <tree>
                                             <field name="ebay_title" />
@@ -37,7 +43,6 @@
                                         </tree>
                                     </field>
                                 </group>
-                            </group>
                         </group>
                     </sheet>
                     <div class="oe_chatter">
@@ -55,8 +60,8 @@
             <field name="model">ebay_suggesting_rules</field>
             <field name="arch" type="xml">
                 <tree string="Suggesting Rules" default_order="create_date desc">
+                    <field name="rname"/>
                     <field name="ebay_interval"/>
-                    <field name="ebay_rule_name"/>
                     <field name="ebay_suggesting_strategy"/>
                     <field name="ebay_amount_type"/>
                     <field name="ebay_amount_value"/>
@@ -73,7 +78,7 @@
                 <kanban>
                     <field name="id"/>
                     <field name="ebay_interval"/>
-                    <field name="ebay_rule_name"/>
+                    <field name="rname"/>
                     <field name="ebay_suggesting_strategy"/>
                     <field name="ebay_amount_type"/>
                     <field name="ebay_amount_value"/>
@@ -84,7 +89,7 @@
                             <div t-attf-class="oe_kanban_global_click">
                                 <div class="o_kanban_record_top mb16">
                                     <div class="o_kanban_record_headings mt4">
-                                        <strong class="o_kanban_record_title"><span><t t-esc="record.ebay_rule_name.value"/></span></strong>
+                                        <strong class="o_kanban_record_title"><span><t t-esc="record.rname.value"/></span></strong>
                                     </div>
                                 </div>
                                 <div class="oe_kanban_details">
