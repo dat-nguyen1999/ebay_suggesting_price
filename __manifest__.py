@@ -8,7 +8,7 @@
     'category': 'Uncategorized',    # loại module
     'version': '0.1',   # phiên bản app
     'depends': [    # dependcy của module mình sẽ phụ thuộc vào những app / module khác nào
-        'base',"mail"
+        'base',"mail","sale_ebay"
     ],
     'external_dependencies': {'python': ['ebaysdk']},
     'data': [

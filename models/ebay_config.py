@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from customize_addons.ebay_pricer_1.tools.ebaysdk import Trading, Finding
+from odoo.addons.sale_ebay.tools.ebaysdk import Trading
 from ebaysdk.exception import ConnectionError
 from odoo import models, fields, api
 
@@ -17,17 +17,10 @@ class ResConfigSettings(models.TransientModel):
     ebay_prod_token = fields.Char("Production Token", default='', config_parameter='ebay_prod_token')
     ebay_prod_app_id = fields.Char("Production App Key", default='', config_parameter='ebay_prod_app_id')
     ebay_prod_cert_id = fields.Char("Production Cert Key", default='', config_parameter='ebay_prod_cert_id')
-
-    ebay_find_app_id = fields.Char("Production App ID", default='', config_parameter='ebay_find_app_id')
-
-    ebay_domain = fields.Selection(selection = [
-        ('find', 'Finding'),
+    ebay_domain = fields.Selection([
         ('prod', 'Production'),
         ('sand', 'Sandbox'),
-    ], string='eBay Environment', default='find', required=True, config_parameter='ebay_domain')
-
-
-
+    ], string='eBay Environment', default='sand', required=True, config_parameter='ebay_domain')
     ebay_currency = fields.Many2one("res.currency", string='ebay Currency',
                                     domain=[('ebay_available', '=', True)], required=True,
                                     default=lambda self: self.env['res.currency'].search([('ebay_available', '=', True)], limit=1).id,
@@ -55,7 +48,6 @@ class ResConfigSettings(models.TransientModel):
         out_of_stock = self.ebay_out_of_stock or ''
         if out_of_stock != self.env['ir.config_parameter'].get_param('ebay_out_of_stock'):
             set_param('ebay_out_of_stock', out_of_stock)
-            # set_param('ebay_domain', self.ebay_domain)
             siteid = self.ebay_site.ebay_id if self.ebay_site else 0
 
             if self.ebay_domain == 'sand':
@@ -75,7 +67,7 @@ class ResConfigSettings(models.TransientModel):
                         ebay_api.execute('SetUserPreferences', call_data)
                     except ConnectionError:
                         pass
-            elif self.ebay_domain == 'prod':
+            else:
                 if self.ebay_prod_token and self.ebay_prod_cert_id and self.ebay_prod_app_id:
                     ebay_api = Trading(
                         domain='api.ebay.com',
@@ -92,7 +84,6 @@ class ResConfigSettings(models.TransientModel):
                         ebay_api.execute('SetUserPreferences', call_data)
                     except ConnectionError:
                         pass
-
 
     @api.model
     def get_values(self):
@@ -114,7 +105,6 @@ class ResConfigSettings(models.TransientModel):
     @api.model
     def sync_policies(self, context=None):
         self.env['ebay.policy'].sync_policies()
-
 
     @api.model
     def sync_ebay_details(self, context=None):
