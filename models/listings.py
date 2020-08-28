@@ -64,9 +64,11 @@ class Listings(models.Model):
     ebay_EAN = fields.Char("EAN", size=13)
     ebay_UPC = fields.Char("UPC", size=13)
 
+
     ebay_current_price = fields.Float('Current Price')
     ebay_suggesting_price = fields.Float('Suggesting Price')
     ebay_competition_price = fields.Float('Competition Price', required=True)
+    ebay_s_competitor = fields.Float("Super Competitor")
     ebay_min_price = fields.Float('Minimum Price', required=True)
     ebay_max_price = fields.Float('Maximum Price', required=True)
     ebay_automated_pricing = fields.Boolean("Automated Pricing", required=True)
@@ -119,18 +121,46 @@ class Listings(models.Model):
             result.append((rec.id, rec.itemId))
         return result
 
-    def update_current_price(self):
-        return "======================================================="
+    ### override
+    # @api.model
+    # def write(self, vals):
+    #     res = super(Listings, self).write(vals)
+
+
+
+    #### action
+    def action_accept_suggesting_price(self):
+        for rec in self:
+            rec.write({
+                "ebay_current_price":rec.ebay_suggesting_price,
+            })
+            rec.itemIDs += self.env['ebay_listing.item'].create({
+                'price': rec.ebay_suggesting_price,
+                'current_price': rec.ebay_current_price,
+                's_competitor': rec.ebay_s_competitor
+            })
+
+
 
 class ListingItems(models.Model):
     #_inherit = "product.template"
     _name = "ebay_listing.item"
     _description = "ebay_listing_item model"
+    _order = "create_date desc"
 
     listId = fields.Many2one("ebay_listing", "Listing Id" )
     price = fields.Float("Suggesting Price" )
     current_price = fields.Float("Current Price")
     s_competitor = fields.Float("Super Competitor")
+
+
+    # @api.model
+    # def create(self, values):
+    #     result = super(ListingItems, self).create(values)
+    #     for rec in self:
+    #         rec.price = values.get("price")
+    #         rec.current_price = values.get("current_price")
+    #         rec.s_competitor = values.get("s_competitor")
 
 #     ebay_id = fields.Char('eBay ID', copy=False)
 #     ebay_use = fields.Boolean('Use eBay', default=False)
