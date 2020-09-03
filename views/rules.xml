@@ -30,7 +30,7 @@
                                 <h2>
                                     <group>
                                     <field name="ebay_interval" />
-                                    <field name="ebay_top_rate_option" />
+<!--                                    <field name="ebay_top_rate_option" />-->
                                 </group>
                                 </h2>
                             </group>
@@ -65,7 +65,7 @@
                     <field name="ebay_suggesting_strategy"/>
                     <field name="ebay_amount_type"/>
                     <field name="ebay_amount_value"/>
-                    <field name="ebay_top_rate_option"  class="d-flex flex-row-reverse" />
+<!--                    <field name="ebay_top_rate_option"  class="d-flex flex-row-reverse" />-->
                 </tree>
             </field>
         </record>
@@ -82,7 +82,7 @@
                     <field name="ebay_suggesting_strategy"/>
                     <field name="ebay_amount_type"/>
                     <field name="ebay_amount_value"/>
-                    <field name="ebay_top_rate_option"/>
+<!--                    <field name="ebay_top_rate_option"/>-->
 
                     <templates>
                         <t t-name="kanban-box">
@@ -92,13 +92,13 @@
                                         <strong class="o_kanban_record_title"><span><t t-esc="record.rname.value"/></span></strong>
                                     </div>
                                 </div>
-                                <div class="oe_kanban_details">
-                                    <span t-if ="record.ebay_top_rate_option.raw_value == true">
-                                        Top rate
-                                    </span>
-                                    <span t-if ="record.ebay_top_rate_option.raw_value == false">No top rate</span>
+<!--                                <div class="oe_kanban_details">-->
+<!--                                    <span t-if ="record.ebay_top_rate_option.raw_value == true">-->
+<!--                                        Top rate-->
+<!--                                    </span>-->
+<!--                                    <span t-if ="record.ebay_top_rate_option.raw_value == false">No top rate</span>-->
 
-                                </div>
+<!--                                </div>-->
                             </div>
                         </t>
                     </templates>

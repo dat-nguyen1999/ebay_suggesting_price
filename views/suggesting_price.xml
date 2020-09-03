@@ -3,13 +3,13 @@
     <data>
         <!-- Listing Form View  -->
         <record id="listing_form_view" model="ir.ui.view">
-            <field name="name">ebay_isting.form.view</field>
+            <field name="name">ebay_listing.form.view</field>
             <field name="model">ebay_listing</field>
             <field name="arch" type="xml">
                 <form>
                     <header>
-                        <button name="update_current_price" type='object' string='Price' class="btn btn-success"   />
-                        <button name="action_accept_suggesting_price" type='object' string='Accept Price' class="btn btn-success"   />
+                        <button name="action_suggesting_price" type='object' string='Get Suggesting Price' class="btn btn-success"   />
+                        <button name="action_accept_suggesting_price" type='object' string='Accept Suggesting Price' class="btn btn-success"   />
                     </header>
                     <sheet>
                         <div class="oe_title">
@@ -46,9 +46,12 @@
                                     </h2>
                                     <h2>
                                         <group>
-                                            <field name="ebay_automated_pricing"/>
+                                            <field name="ebay_automated_suggesting"/>
+                                            <field name="ebay_interval_type"/>
+                                            <field name="ebay_interval_value" attrs="{'invisible': [('ebay_interval_type','in',('daily','hourly','minutely'))] }"/>
                                             <field name="ebay_repricer" style="font-weight: bold;"/>
-                                            <field name="ebay_instock"/>
+                                            <field name="ebay_search_strategy" />
+                                            <field name="ebay_keyword" attrs="{'invisible': [('ebay_search_strategy','=','barcode')] }"/>
                                         </group>
                                     </h2>
                                 </group>
@@ -100,13 +103,13 @@
                     <field name="ebay_title"/>
                     <field name="ebay_category_id"/>
                     <field name="ebay_repricer"/>
-                    <field name="ebay_instock"/>
+                    <field name="ebay_search_strategy" />
                     <field name="ebay_min_price"/>
                     <field name="ebay_max_price"/>
                     <field name="ebay_competition_price"/>
                     <field name="ebay_current_price"/>
                     <field name="ebay_suggesting_price"/>
-                    <field name="ebay_automated_pricing"  class="d-flex flex-row-reverse" />
+                    <field name="ebay_automated_suggesting"  class="d-flex flex-row-reverse" />
                 </tree>
             </field>
         </record>
@@ -124,7 +127,7 @@
                     <field name="ebay_current_price"/>
                     <field name="ebay_min_price"/>
                     <field name="ebay_max_price"/>
-                    <field name="ebay_automated_pricing" />
+                    <field name="ebay_automated_suggesting" />
                     <field name="ebay_ePID"/>
                     <field name="ebay_ISBN"/>
                     <field name="ebay_UPC"/>
@@ -144,7 +147,7 @@
                                     <div t-if="record.ebay_current_price.value">
                                         <t t-esc="record.ebay_current_price.value"/>
                                     </div>
-                                    <span t-if ="record.ebay_automated_pricing">Automated</span>
+                                    <span t-if ="record.ebay_automated_suggesting">Automated suggesting</span>
 
 
                                 </div>
@@ -163,6 +166,18 @@
             <field name="view_mode">kanban,tree,form,activity</field>
         </record>
 
+        <record id="ir_cron_suggesting_price" model="ir.cron" forcecreate="True">
+            <field name="name">Get Suggesting Price</field>
+            <field name="model_id" ref="model_ebay_listing"/>
+            <field name="state">code</field>
+            <field name="code">model.automated_suggesting_price()</field>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number" > 1 </field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="True"/>
+            <!-- <field name="nextcall" eval="(DateTime.now()).strftime('%Y-%m-%d 00:00:01')"/>-->
+        </record>
 
 
     </data>

@@ -38,7 +38,7 @@ class Suggesting_Rules(models.Model):
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _name = "ebay_suggesting_rules"
     _description = "suggesting rules model"
-
+    _rec_name = 'rname'
     ebay_interval = fields.Datetime("Schedule Pricing")
     rname = fields.Char("Rule Name", compute='_set_ebay_rule_name', copy=False)
 
@@ -86,6 +86,7 @@ class Suggesting_Rules(models.Model):
     def name_get(self):
         result = []
         for rec in self:
-            result.append((rec.id, rec.rname))
+            name = rec.rname + " ID_" + str(rec.id)
+            result.append((rec.id, name))
         return result
 
