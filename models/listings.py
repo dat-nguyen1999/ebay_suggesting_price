@@ -12,6 +12,7 @@ import json
 import os
 
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from ebaysdk.exception import ConnectionError
 from ..tools.ebaysdk import Finding
 #from odoo.addons.sale_ebay.tools.ebaysdk import Trading
@@ -77,16 +78,18 @@ class Listings(models.Model):
     ebay_min_price = fields.Float('Minimum Price', required=True)
     ebay_max_price = fields.Float('Maximum Price', required=True)
 
-    ebay_automated_suggesting = fields.Boolean("Automated Suggesting", required=True)
+    ebay_automated_accepting = fields.Boolean("Automated Accepting", default = True)
+    ebay_automated_suggesting = fields.Boolean("Automated Suggesting", default = True)
     ebay_interval_type = fields.Selection([
         ('daily', 'Daily'),
         ('hourly', 'Hourly'),
         ('minutely', 'Minutely'),
         ('custom', 'Custom')
-    ], string='Interval Type', default='minutely', required=True)
-    ebay_interval_value = fields.Char("Interval Value", help="Interval Format e.g :'1h 30m'")
+    ], string='Interval Type', default='hourly', required=True)
+    ebay_interval_value = fields.Char("Interval Value", help="Interval Format e.g :'1h 30m'", default ="45m")
 
-    interval_number = fields.Integer("Interval", compute='_period_in_minutes', )
+    interval_number = fields.Integer("Interval", compute='_period_in_minutes' )
+    ebay_next_call = fields.Datetime("Next call")
 
     ebay_search_strategy = fields.Selection([
         ('keyword', 'Keyword'),
@@ -98,7 +101,15 @@ class Listings(models.Model):
     itemIDs = fields.One2many("ebay_listing.item", "listId" )    # , readonly =True
     ebay_repricer = fields.Many2one("ebay_suggesting_rules","Repricing Rules")
 
-    @api.depends('ebay_interval_type', 'ebay_interval_value' )
+
+    ################################################################################################
+    @api.onchange('ebay_automated_suggesting')
+    def _compute_next_call(self):
+        for record in self:
+            if record.ebay_automated_suggesting:
+                record.ebay_next_call = datetime.now() + relativedelta(minutes = record.interval_number)
+
+
     def _period_in_minutes(self):
         for record in self:
             if record.ebay_interval_type == 'daily':
@@ -109,8 +120,11 @@ class Listings(models.Model):
                 record.interval_number = 1
             else:
                 interval_value_component = record.ebay_interval_value.split()
-                record.interval_number = int(interval_value_component[0][:-1]) * 60 + int(interval_value_component[1][:-1])
-            record.interval_number = 1
+                if len(interval_value_component) == 2:
+                    record.interval_number = int(interval_value_component[0][:-1]) * 60 + int(interval_value_component[1][:-1])
+                else:
+                    record.interval_number = int(interval_value_component[0][:-1]) * 60 if interval_value_component[0][-1] == 'h' else int(interval_value_component[0][:-1])
+
     def _get_minute_interval(self):
         for rec in self:
             return rec.interval_number
@@ -274,13 +288,15 @@ class Listings(models.Model):
                 my_competitor += float(rules[1]) if rules[2] == '$' else my_competitor * float(rules[1]) / 100.00
             my_competitor = round(my_competitor,2)
             return str(my_competitor)
+
     def _action_suggesting_price(self,rec):
         request = self.build_request(rec)
         try:
             ebay_api = Finding(
                 domain='svcs.ebay.com',
                 config_file=None,
-                appid='DatNguye-simpleca-PRD-0c8ee5576-eb7ef499',
+                # appid='DatNguye-simpleca-PRD-0c8ee5576-eb7ef499',
+                appid= self.env['ir.config_parameter'].sudo().get_param('ebay_prod_app_id'),
                 siteid='EBAY-US',
                 https=True,
             )
@@ -311,10 +327,13 @@ class Listings(models.Model):
                 elif my_competitor >= rec.ebay_min_price and my_competitor <= rec.ebay_max_price:
                     suggesting_price = self.compute_suggesting_price(rec, my_competitor)
                     if float(suggesting_price) >= rec.ebay_min_price and float(
-                            suggesting_price) <= rec.ebay_max_price:  # suggesting price in [min.max]
-                        rec.ebay_suggesting_price = suggesting_price
-                    rec.ebay_s_competitor = super_competition_price
-                    rec.ebay_competition_price = my_competitor
+                            suggesting_price) <= rec.ebay_max_price:    # suggesting price in [min.max]
+                        rec.ebay_suggesting_price = suggesting_price    # update suggesting price
+                    rec.ebay_s_competitor = super_competition_price     #   update super competition price
+                    rec.ebay_competition_price = my_competitor          #   update competition price
+                    if rec.ebay_automated_accepting:
+                        rec.ebay_current_price = suggesting_price       #   update automated current price
+                    rec.ebay_next_call = datetime.now() + relativedelta(minutes=rec.interval_number)    # update next call
                     rec.itemIDs += self.env['ebay_listing.item'].create({
                         'price': suggesting_price,
                         'current_price': rec.ebay_current_price,  # update in the future
@@ -322,6 +341,7 @@ class Listings(models.Model):
                     })
                     break
                 else:
+                    rec.ebay_next_call += relativedelta(minutes=rec.interval_number)  # update next call
                     break
         else:
             raise ValueError(request)
@@ -336,7 +356,11 @@ class Listings(models.Model):
         for listing in listings:
             print(listing.ebay_automated_suggesting)
             if listing.ebay_automated_suggesting:
-                self._action_suggesting_price(listing)
+                now = datetime.now()
+                if now >= listing.ebay_next_call:
+                    self._action_suggesting_price(listing)
+                print(listing.ebay_next_call)
+                print(listing.interval_number)
 
 
 
