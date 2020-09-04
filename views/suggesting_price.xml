@@ -81,13 +81,9 @@
                         </notebook>
                     </sheet>
                     <footer>
-                        <dashboard>
-                             <view type="graph" />
+                        <canvas id="chart"></canvas>
+                        <script type="text/javascript" src="/ebay_pricer_1/static/src/js/build_chart.js"/>
 
-                                <aggregate name="ebay_suggesting_price"/>
-                                <aggregate name="ebay_current_price"/>
-                                <aggregate name="ebay_s_competitor"/>
-                        </dashboard>
                     </footer>
                     <div class="oe_chatter">
                         <field name="message_follower_ids" widget="mail_followers"/>
@@ -154,13 +150,13 @@
                                         <strong><field name="ebay_current_price" widget="monetary"/>$</strong>
                                     </div>
                                     <div t-if="record.ebay_automated_suggesting.raw_value">
-                                         <span>Automated suggesting price</span>
+                                        <span>Automated suggesting price</span>
                                     </div>
                                     <div t-if="record.ebay_automated_accepting.raw_value">
-                                         <span>Automated accepting price</span>
+                                        <span>Automated accepting price</span>
                                     </div>
-<!--                                    <span t-if ="record.ebay_automated_suggesting">Automated suggesting price</span>-->
-<!--                                    <span t-if ="record.ebay_automated_accepting">Automated accepting price</span>-->
+                                    <!--                                    <span t-if ="record.ebay_automated_suggesting">Automated suggesting price</span>-->
+                                    <!--                                    <span t-if ="record.ebay_automated_accepting">Automated accepting price</span>-->
 
 
                                 </div>

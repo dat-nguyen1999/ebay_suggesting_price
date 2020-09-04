@@ -109,6 +109,17 @@ class Listings(models.Model):
             if record.ebay_automated_suggesting:
                 record.ebay_next_call = datetime.now() + relativedelta(minutes = record.interval_number)
 
+    @api.onchange('ebay_interval_type')
+    def _compute_next_call_by_interval_type(self):
+        for record in self:
+            if record.ebay_automated_suggesting:
+                record.ebay_next_call = datetime.now() + relativedelta(minutes=record.interval_number)
+
+    @api.onchange('interval_number')
+    def _compute_next_call_by_interval_number(self):
+        for record in self:
+            if record.ebay_automated_suggesting:
+                record.ebay_next_call = datetime.now() + relativedelta(minutes=record.interval_number)
 
     def _period_in_minutes(self):
         for record in self:

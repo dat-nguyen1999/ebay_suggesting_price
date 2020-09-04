@@ -8,7 +8,7 @@
     'category': 'Uncategorized',    # loại module
     'version': '0.1',   # phiên bản app
     'depends': [    # dependcy của module mình sẽ phụ thuộc vào những app / module khác nào
-        'base',"mail","sale_ebay"
+        'base',"mail","sale_ebay",'web'
     ],
     'external_dependencies': {'python': ['ebaysdk']},
     'data': [
@@ -17,8 +17,9 @@
         'views/rules.xml',
         'views/ebay_settings.xml',
         'views/menuItem.xml',
+        'views/importChartJS.xml',
     ], # liên quan đến view, các file xml
-    # 'qweb': ['static/src/xml/*.xml'],
+    'qweb': ['static/src/xml/hello_world.xml'],
     'installable': True,    # cài đặt được
     'application': True,    # khi vào menu Apps, mặc định filter "Apps" sẽ được dùng.
 }
