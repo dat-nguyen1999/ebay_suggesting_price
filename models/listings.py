@@ -71,10 +71,10 @@ class Listings(models.Model):
     ebay_UPC = fields.Char("UPC", size=13)
 
 
-    ebay_current_price = fields.Float('Current Price')
-    ebay_suggesting_price = fields.Float('Suggesting Price')
-    ebay_competition_price = fields.Float('Competition Price', required=True)
-    ebay_s_competitor = fields.Float("Super Competitor")
+    ebay_current_price = fields.Float('Current Price', readonly =True)
+    ebay_suggesting_price = fields.Float('Suggesting Price', readonly =True)
+    ebay_competition_price = fields.Float('Competition Price', readonly =True)
+    ebay_s_competitor = fields.Float("Super Competitor", readonly =True)
     ebay_min_price = fields.Float('Minimum Price', required=True)
     ebay_max_price = fields.Float('Maximum Price', required=True)
 
@@ -89,7 +89,7 @@ class Listings(models.Model):
     ebay_interval_value = fields.Char("Interval Value", help="Interval Format e.g :'1h 30m'", default ="45m")
 
     interval_number = fields.Integer("Interval", compute='_period_in_minutes' )
-    ebay_next_call = fields.Datetime("Next call")
+    ebay_next_call = fields.Datetime("Next call", readonly =True)
 
     ebay_search_strategy = fields.Selection([
         ('keyword', 'Keyword'),
@@ -98,11 +98,31 @@ class Listings(models.Model):
     ebay_keyword = fields.Text("Keyword")
     ebay_instock = fields.Integer("In stock")
 
-    itemIDs = fields.One2many("ebay_listing.item", "listId" )    # , readonly =True
+    itemIDs = fields.One2many("ebay_listing.item", "listId", readonly =True )    # , readonly =True
     ebay_repricer = fields.Many2one("ebay_suggesting_rules","Repricing Rules")
 
 
     ################################################################################################
+    ################### Functions ##################################################################
+    ################################################################################################
+    ################ Compute #######################################################################
+    def _period_in_minutes(self):
+        for record in self:
+            if record.ebay_interval_type == 'daily':
+                record.interval_number = 24 * 60
+            elif record.ebay_interval_type == 'hourly':
+                record.interval_number = 60
+            elif record.ebay_interval_type == 'minutely':
+                record.interval_number = 1
+            else:
+                interval_value_component = record.ebay_interval_value.split()
+                if len(interval_value_component) == 2:
+                    record.interval_number = int(interval_value_component[0][:-1]) * 60 + int(interval_value_component[1][:-1])
+                else:
+                    record.interval_number = int(interval_value_component[0][:-1]) * 60 if interval_value_component[0][-1] == 'h' else int(interval_value_component[0][:-1])
+
+    ################ Onchange #######################################################################
+
     @api.onchange('ebay_automated_suggesting')
     def _compute_next_call(self):
         for record in self:
@@ -121,26 +141,8 @@ class Listings(models.Model):
             if record.ebay_automated_suggesting:
                 record.ebay_next_call = datetime.now() + relativedelta(minutes=record.interval_number)
 
-    def _period_in_minutes(self):
-        for record in self:
-            if record.ebay_interval_type == 'daily':
-                record.interval_number = 24 * 60
-            elif record.ebay_interval_type == 'hourly':
-                record.interval_number = 60
-            elif record.ebay_interval_type == 'minutely':
-                record.interval_number = 1
-            else:
-                interval_value_component = record.ebay_interval_value.split()
-                if len(interval_value_component) == 2:
-                    record.interval_number = int(interval_value_component[0][:-1]) * 60 + int(interval_value_component[1][:-1])
-                else:
-                    record.interval_number = int(interval_value_component[0][:-1]) * 60 if interval_value_component[0][-1] == 'h' else int(interval_value_component[0][:-1])
+    ################ Constraints #######################################################################
 
-    def _get_minute_interval(self):
-        for rec in self:
-            return rec.interval_number
-
-    #### Constraints######
     @api.constrains('itemId')
     def _check_itemId_unique(self):
         dict_itemId = { }
@@ -227,9 +229,8 @@ class Listings(models.Model):
     # def write(self, vals):
     #     res = super(Listings, self).write(vals)
 
+    ################ Actions #######################################################################
 
-
-    #### action
     def action_accept_suggesting_price(self):
         for rec in self:
             rec.write({
@@ -303,12 +304,14 @@ class Listings(models.Model):
     def _action_suggesting_price(self,rec):
         request = self.build_request(rec)
         try:
+            print(
+                  self.env['ebay.site'].search([('id', '=', int(self.env['ir.config_parameter'].sudo().get_param('ebay_site')))], limit=1).name.split()[0])
             ebay_api = Finding(
                 domain='svcs.ebay.com',
                 config_file=None,
                 # appid='DatNguye-simpleca-PRD-0c8ee5576-eb7ef499',
                 appid= self.env['ir.config_parameter'].sudo().get_param('ebay_prod_app_id'),
-                siteid='EBAY-US',
+                siteid=self.env['ebay.site'].search([('id', '=', int(self.env['ir.config_parameter'].sudo().get_param('ebay_site')))], limit=1).name.split()[0],
                 https=True,
             )
             time.sleep(1)
@@ -354,12 +357,13 @@ class Listings(models.Model):
                 else:
                     rec.ebay_next_call += relativedelta(minutes=rec.interval_number)  # update next call
                     break
+        elif response.reply.ack == 'Failure':
+            raise ValidationError(response.reply.errorMessage.error.message)
         else:
-            raise ValueError(request)
+            raise ValidationError("Something went wrong!!")
 
     def action_suggesting_price(self):
         for rec in self:
-            print("echo 'Get Suggesting Price: %s' > /tmp/test.txt" % datetime.now())
             self._action_suggesting_price(rec)
     def automated_suggesting_price(self):
         print("Automated!!")
