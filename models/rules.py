@@ -116,6 +116,5 @@ class Suggesting_Rules(models.Model):
         ])
         if query:
             raise ValidationError("Rules has existed !")
-        vals = args[1]
         rec = super(Suggesting_Rules, self).write(vals)      
         return rec
