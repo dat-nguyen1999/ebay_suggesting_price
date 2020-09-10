@@ -2,13 +2,13 @@
 <odoo>
     <data>
         <!-- Suggesting Rules Form View  -->
-         <record id="suggesting_rules_form_view" model="ir.ui.view">
+        <record id="suggesting_rules_form_view" model="ir.ui.view">
             <field name="name">ebay_suggesting_rules.form.view</field>
             <field name="model">ebay_suggesting_rules</field>
             <field name="arch" type="xml">
                 <form>
                     <header>
-<!--                        <button name="update_current_price" type='object' string='Reprice' class="btn btn-success"   />-->
+                        <!--                        <button name="update_current_price" type='object' string='Reprice' class="btn btn-success" />-->
                     </header>
                     <sheet>
                         <div class="oe_title">
@@ -22,28 +22,28 @@
                             <group colspan="2">
                                 <h2>
                                     <group>
-                                    <field name="ebay_suggesting_strategy" style="font-weight: bold;"/>
-                                    <field name="ebay_amount_type" style="font-weight: bold;" attrs="{'readonly':[('ebay_suggesting_strategy','=','matching')]}"/>
-                                    <field name="ebay_amount_value" style="font-weight: bold;" attrs="{'readonly':[('ebay_suggesting_strategy','=','matching')]}"/>
-                                </group>
+                                        <field name="ebay_suggesting_strategy" style="font-weight: bold;"/>
+                                    </group>
                                 </h2>
                                 <h2>
                                     <group>
-                                    <field name="ebay_interval" />
-<!--                                    <field name="ebay_top_rate_option" />-->
-                                </group>
+                                        <field name="ebay_amount_type" style="font-weight: bold;" attrs="{'invisible':[('ebay_suggesting_strategy','=','matching')]}"/>
+                                        <field name="ebay_amount_value" style="font-weight: bold;" attrs="{'invisible':[('ebay_suggesting_strategy','=','matching')]}"/>
+                                    </group>
                                 </h2>
+
                             </group>
-                             <group>
-                                    <field name="ebay_listings">
-                                        <tree>
-                                            <field name="ebay_title" />
-                                            <field name="ebay_category_id" />
-                                            <field name="write_date" />
-                                        </tree>
-                                    </field>
-                                </group>
                         </group>
+                        <notebook>
+                            <pages string="Listings">
+                                <field name="ebay_listings">
+                                    <tree>
+                                        <field name="ebay_title" />
+                                        <field name="ebay_category_id" />
+                                    </tree>
+                                </field>
+                            </pages>
+                        </notebook>
                     </sheet>
                     <div class="oe_chatter">
                         <field name="message_follower_ids" widget="mail_followers"/>
@@ -54,18 +54,17 @@
             </field>
         </record>
 
-         <!-- Suggesting Rules Tree View  -->
+        <!-- Suggesting Rules Tree View  -->
         <record id="suggesting_rules_tree_view" model="ir.ui.view">
             <field name="name">ebay_suggesting_rules.tree.view</field>
             <field name="model">ebay_suggesting_rules</field>
             <field name="arch" type="xml">
                 <tree string="Suggesting Rules" default_order="create_date desc">
                     <field name="rname"/>
-                    <field name="ebay_interval"/>
                     <field name="ebay_suggesting_strategy"/>
                     <field name="ebay_amount_type"/>
                     <field name="ebay_amount_value"/>
-<!--                    <field name="ebay_top_rate_option"  class="d-flex flex-row-reverse" />-->
+                    <!--                    <field name="ebay_top_rate_option" class="d-flex flex-row-reverse" />-->
                 </tree>
             </field>
         </record>
@@ -77,28 +76,31 @@
             <field name="arch" type="xml">
                 <kanban>
                     <field name="id"/>
-                    <field name="ebay_interval"/>
                     <field name="rname"/>
                     <field name="ebay_suggesting_strategy"/>
                     <field name="ebay_amount_type"/>
                     <field name="ebay_amount_value"/>
-<!--                    <field name="ebay_top_rate_option"/>-->
+                    <!--                    <field name="ebay_top_rate_option"/>-->
 
                     <templates>
                         <t t-name="kanban-box">
                             <div t-attf-class="oe_kanban_global_click">
                                 <div class="o_kanban_record_top mb16">
                                     <div class="o_kanban_record_headings mt4">
-                                        <strong class="o_kanban_record_title"><span><t t-esc="record.rname.value"/></span></strong>
+                                        <strong class="o_kanban_record_title">
+                                            <span>
+                                                <t t-esc="record.rname.value"/>
+                                            </span>
+                                        </strong>
                                     </div>
                                 </div>
-<!--                                <div class="oe_kanban_details">-->
-<!--                                    <span t-if ="record.ebay_top_rate_option.raw_value == true">-->
-<!--                                        Top rate-->
-<!--                                    </span>-->
-<!--                                    <span t-if ="record.ebay_top_rate_option.raw_value == false">No top rate</span>-->
+                                <!--                                <div class="oe_kanban_details">-->
+                                <!--                                    <span t-if ="record.ebay_top_rate_option.raw_value == true">-->
+                                <!--                                        Top rate-->
+                                <!--                                    </span>-->
+                                <!--                                    <span t-if ="record.ebay_top_rate_option.raw_value == false">No top rate</span>-->
 
-<!--                                </div>-->
+                                <!--                                </div>-->
                             </div>
                         </t>
                     </templates>

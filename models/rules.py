@@ -39,7 +39,6 @@ class Suggesting_Rules(models.Model):
     _name = "ebay_suggesting_rules"
     _description = "suggesting rules model"
     _rec_name = 'rname'
-    ebay_interval = fields.Datetime("Schedule Pricing")
     rname = fields.Char("Rule Name", compute='_set_ebay_rule_name', copy=False)
 
     ebay_suggesting_strategy = fields.Selection([
@@ -62,31 +61,60 @@ class Suggesting_Rules(models.Model):
             if record.ebay_amount_value < 0:
                 raise ValidationError("Amount value cannot be negative")
 
-    @api.constrains('rname')
-    def _check_rule_name_unique(self):
-        dict_rule_name = {}
-        for record in self:
-            if dict_rule_name.get(record.rname):
-                raise ValidationError("Fields Rule Name has already exists!")
-            dict_rule_name[record.rname] = True
-            print(record.rname)
-
-    _sql_constraints = [
-        ('Rule_name_unique', 'unique (rname)', "Rule Name has already exists!")
-    ]
 
     @api.depends('ebay_suggesting_strategy','ebay_amount_type','ebay_amount_value')
     def _set_ebay_rule_name(self):
         for rec in self:
+            count = self.env['ebay_suggesting_rules'].search_count([
+                ['ebay_suggesting_strategy', '=', rec.ebay_suggesting_strategy],
+                ['ebay_amount_value', '=', rec.ebay_amount_value],
+                ['ebay_amount_type', '=', rec.ebay_amount_type]
+            ])
+            if count != 1:
+                raise ValidationError("Rules has existed !")
             if rec.ebay_suggesting_strategy != 'matching':
                 rec.rname = dict(rec._fields['ebay_suggesting_strategy'].selection).get(rec.ebay_suggesting_strategy) + ' ' + str(rec.ebay_amount_value) + ' ' + dict(rec._fields['ebay_amount_type'].selection).get(rec.ebay_amount_type)
             else:
                 rec.rname = dict(rec._fields['ebay_suggesting_strategy'].selection).get(rec.ebay_suggesting_strategy)
 
-    def name_get(self):
-        result = []
-        for rec in self:
-            name = rec.rname + " ID_" + str(rec.id)
-            result.append((rec.id, name))
-        return result
+    # def name_get(self):
+    #     result = []
+    #     for rec in self:
+    #         name = rec.rname + " ID_" + str(rec.id)
+    #         result.append((rec.id, name))
+    #     return result
 
+    @api.model
+    def create(self, vals):
+        query = self.env['ebay_suggesting_rules'].search_count([
+            ['ebay_suggesting_strategy', '=', vals.get('ebay_suggesting_strategy')],
+            ['ebay_amount_value', '=', vals.get('ebay_amount_value')],
+            ['ebay_amount_type', '=', vals.get('ebay_amount_type')]
+        ])
+        if query:
+            raise ValidationError("Rules has existed !")
+        rec = super(Suggesting_Rules, self).create(vals)      
+        return rec
+    
+    @api.model
+    def write(self , *kargs ,vals):
+        # print(vals)
+        # print(kargs)
+        # try:
+        #     rec_id = kargs[0][0]
+        # except ValueError as e:
+        #     pass
+        # rec = self.browse(rec_id)
+        # ebay_suggesting_strategy = vals.get('ebay_suggesting_strategy') if 'ebay_suggesting_strategy' in vals else rec.ebay_suggesting_strategy
+        # ebay_amount_value =  vals.get('ebay_amount_value') if 'ebay_amount_value' in vals else rec.ebay_amount_value
+        # ebay_amount_type =  vals.get('ebay_amount_type') if 'ebay_amount_type' in vals else rec.ebay_amount_type
+        # query = self.env['ebay_suggesting_rules'].search_count([
+        #     ['ebay_suggesting_strategy', '=', ebay_suggesting_strategy],
+        #     ['ebay_amount_value', '=', ebay_amount_value],
+        #     ['ebay_amount_type', '=', ebay_amount_type]
+        # ])
+        # if query:
+        #     raise ValidationError("Rules has existed !")
+        # vals = kargs[1]
+        rec = super(Suggesting_Rules, self).write(vals)      
+        return rec

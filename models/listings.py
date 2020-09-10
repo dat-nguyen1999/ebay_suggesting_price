@@ -53,7 +53,6 @@ class Listings(models.Model):
     _name = "ebay_listing"
     _description = "ebay_listing model"
 
-    itemId = fields.Char("ItemID",required=True, copy=False)  #readonly = True
     ebay_title = fields.Char('Title', size=80,
                              help='The title is restricted to 80 characters', required=True)
     ebay_URL = fields.Html('URL', default='<p><br></p>')
@@ -61,10 +60,7 @@ class Listings(models.Model):
     ebay_category_id = fields.Many2one('ebay.category',
                                        string="Category",
                                        domain=[('category_type', '=', 'ebay'), ('leaf_category', '=', True)], required=True)
-    #ebay_listing_type = fields.Char("Listing Type", required=True)
-    # ebay_listing_type = fields.Selection([
-    #             #('Chinese', 'Auction'),
-    #             ('FixedPriceItem', 'Fixed price')], string='Listing Type', default='FixedPriceItem')
+
     ebay_ePID = fields.Char("ePID", size=13)
     ebay_ISBN = fields.Char("ISBN", size = 13)
     ebay_EAN = fields.Char("EAN", size=13)
@@ -135,21 +131,15 @@ class Listings(models.Model):
             if record.ebay_automated_suggesting:
                 record.ebay_next_call = datetime.now() + relativedelta(minutes=record.interval_number)
 
-    @api.onchange('interval_number')
+    @api.onchange('ebay_interval_value')
     def _compute_next_call_by_interval_number(self):
         for record in self:
+            print("change interval")
             if record.ebay_automated_suggesting:
+                print(record.interval_number)
                 record.ebay_next_call = datetime.now() + relativedelta(minutes=record.interval_number)
-
+                print(record.ebay_next_call)
     ################ Constraints #######################################################################
-
-    @api.constrains('itemId')
-    def _check_itemId_unique(self):
-        dict_itemId = { }
-        for record in self:
-            if dict_itemId.get(record.itemId):
-                raise ValidationError("Fields itemId already exists!")
-            dict_itemId[record.itemId] = True
 
     @api.constrains('ebay_min_price')
     def _check_negative_min_price(self):
@@ -200,6 +190,7 @@ class Listings(models.Model):
                 for lit in interval_component[0][:-1]:
                     if lit not in ['0','1','2','3','4','5','6','7','8','9']:
                         raise ValidationError("Interval format e.g: '30m' or '2h'")
+
     # @api.depends('ebay_ePID', 'ebay_ISBN','ebay_EAN', 'ebay_UPC')
     # def _check_selection_search_strategy(self):
     #     for record in self:
@@ -213,17 +204,14 @@ class Listings(models.Model):
     #         if record.ebay_search_strategy == 'keyword':
     #             raise ValidationError("Keyword must not empty!")
 
-
-    _sql_constraints = [
-        ('itemId_unique', 'unique(itemId)', "itemId already exists!")
-    ]
+    
 
     def name_get(self):
         result = []
         for rec in self:
-            result.append((rec.id, rec.itemId))
+            name = "L" + str(rec.id).zfill(5)
+            result.append((rec.id, name))
         return result
-
     ### override
     # @api.model
     # def write(self, vals):
@@ -247,7 +235,7 @@ class Listings(models.Model):
             if rec.ebay_keyword:
                 request['keywords'] = rec.ebay_keyword
             else:
-                raise ValueError("Keyword must be empty!")
+                raise ValidationError("Keyword must be empty!")
             request['categoryId'] = rec.ebay_category_id.category_id
         else:
             if rec.ebay_ISBN:
@@ -272,7 +260,7 @@ class Listings(models.Model):
                 }
             }
         if not request:
-            raise ValueError("Request is empty!")
+            raise ValidationError("Request is empty!")
 
         request['itemFilter'] = [
             {'name': 'ListingType', 'value': 'FixedPrice'},
@@ -283,6 +271,7 @@ class Listings(models.Model):
             'pageNumber': 1
         }
         request['sortOrder'] = 'PricePlusShippingLowest'
+        print(request)
         return request
 
     def compute_suggesting_price(self, rec, my_competitor):
@@ -304,17 +293,14 @@ class Listings(models.Model):
     def _action_suggesting_price(self,rec):
         request = self.build_request(rec)
         try:
-            print(
-                  self.env['ebay.site'].search([('id', '=', int(self.env['ir.config_parameter'].sudo().get_param('ebay_site')))], limit=1).name.split()[0])
             ebay_api = Finding(
                 domain='svcs.ebay.com',
                 config_file=None,
-                # appid='DatNguye-simpleca-PRD-0c8ee5576-eb7ef499',
                 appid= self.env['ir.config_parameter'].sudo().get_param('ebay_prod_app_id'),
                 siteid=self.env['ebay.site'].search([('id', '=', int(self.env['ir.config_parameter'].sudo().get_param('ebay_site')))], limit=1).name.split()[0],
                 https=True,
             )
-            time.sleep(1)
+            time.sleep(0.1)
         except ConnectionError as e:
             print(e)
             print(e.response.dict())
@@ -323,26 +309,32 @@ class Listings(models.Model):
         else:
             response = ebay_api.execute('findItemsByProduct', request)
 
-        print(request)
 
         if response.reply.ack == 'Success':
-            super_competition_price = float('inf')
-            for listing in response.reply.searchResult.item:
-                if listing.shippingInfo.get('shippingServiceCost'):
+            super_competition_price = float('inf')                              # set super price = inf
+            if response.reply.searchResult._count == '0':                       # check list of result, if result is empty, _count = '0'
+                raise ValidationError("Not found Items!!")                      # raise Error
+            for listing in response.reply.searchResult.item:            
+                if listing.shippingInfo.get('shippingServiceCost'):             # if shippingServiceCost is exist
                     my_competitor = float(listing.sellingStatus.currentPrice.value) + float(
                         listing.shippingInfo.shippingServiceCost.value)
                 else:
-                    my_competitor = float(listing.sellingStatus.currentPrice.value)
+                    my_competitor = float(listing.sellingStatus.currentPrice.value) # shippingType Calculated
                 super_competition_price = my_competitor if my_competitor < super_competition_price else super_competition_price
-                print(my_competitor)
 
                 if my_competitor < rec.ebay_min_price:
                     continue
                 elif my_competitor >= rec.ebay_min_price and my_competitor <= rec.ebay_max_price:
                     suggesting_price = self.compute_suggesting_price(rec, my_competitor)
+                    # print(suggesting_price)
+                    # print(rec.ebay_min_price)
+                    # print(rec.ebay_min_price)
                     if float(suggesting_price) >= rec.ebay_min_price and float(
                             suggesting_price) <= rec.ebay_max_price:    # suggesting price in [min.max]
                         rec.ebay_suggesting_price = suggesting_price    # update suggesting price
+                    else:
+                        suggesting_price = rec.ebay_min_price
+                        rec.ebay_suggesting_price = suggesting_price
                     rec.ebay_s_competitor = super_competition_price     #   update super competition price
                     rec.ebay_competition_price = my_competitor          #   update competition price
                     if rec.ebay_automated_accepting:
@@ -366,16 +358,12 @@ class Listings(models.Model):
         for rec in self:
             self._action_suggesting_price(rec)
     def automated_suggesting_price(self):
-        print("Automated!!")
         listings = self.env['ebay_listing'].search([])
         for listing in listings:
-            print(listing.ebay_automated_suggesting)
             if listing.ebay_automated_suggesting:
                 now = datetime.now()
                 if now >= listing.ebay_next_call:
                     self._action_suggesting_price(listing)
-                print(listing.ebay_next_call)
-                print(listing.interval_number)
 
 
 
