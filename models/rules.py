@@ -65,13 +65,14 @@ class Suggesting_Rules(models.Model):
     @api.depends('ebay_suggesting_strategy','ebay_amount_type','ebay_amount_value')
     def _set_ebay_rule_name(self):
         for rec in self:
-            count = self.env['ebay_suggesting_rules'].search_count([
-                ['ebay_suggesting_strategy', '=', rec.ebay_suggesting_strategy],
-                ['ebay_amount_value', '=', rec.ebay_amount_value],
-                ['ebay_amount_type', '=', rec.ebay_amount_type]
-            ])
-            if count != 1:
-                raise ValidationError("Rules has existed !")
+            # count = self.env['ebay_suggesting_rules'].search_count([
+            #     ['ebay_suggesting_strategy', '=', rec.ebay_suggesting_strategy],
+            #     ['ebay_amount_value', '=', rec.ebay_amount_value],
+            #     ['ebay_amount_type', '=', rec.ebay_amount_type]
+            # ])
+            # print(count)
+            # if count != 1:
+            #     raise ValidationError("Rules has existed !")
             if rec.ebay_suggesting_strategy != 'matching':
                 rec.rname = dict(rec._fields['ebay_suggesting_strategy'].selection).get(rec.ebay_suggesting_strategy) + ' ' + str(rec.ebay_amount_value) + ' ' + dict(rec._fields['ebay_amount_type'].selection).get(rec.ebay_amount_type)
             else:
@@ -97,24 +98,24 @@ class Suggesting_Rules(models.Model):
         return rec
     
     @api.model
-    def write(self , *kargs ,vals):
-        # print(vals)
-        # print(kargs)
-        # try:
-        #     rec_id = kargs[0][0]
-        # except ValueError as e:
-        #     pass
-        # rec = self.browse(rec_id)
-        # ebay_suggesting_strategy = vals.get('ebay_suggesting_strategy') if 'ebay_suggesting_strategy' in vals else rec.ebay_suggesting_strategy
-        # ebay_amount_value =  vals.get('ebay_amount_value') if 'ebay_amount_value' in vals else rec.ebay_amount_value
-        # ebay_amount_type =  vals.get('ebay_amount_type') if 'ebay_amount_type' in vals else rec.ebay_amount_type
-        # query = self.env['ebay_suggesting_rules'].search_count([
-        #     ['ebay_suggesting_strategy', '=', ebay_suggesting_strategy],
-        #     ['ebay_amount_value', '=', ebay_amount_value],
-        #     ['ebay_amount_type', '=', ebay_amount_type]
-        # ])
-        # if query:
-        #     raise ValidationError("Rules has existed !")
-        # vals = kargs[1]
+    def write(self, args ,vals):
+        print(vals)
+        print(args)
+        try:
+            rec_id = args[0]
+        except TypeError as e:
+            raise('Something went wrong')
+        rec = self.browse(rec_id)
+        ebay_suggesting_strategy = vals.get('ebay_suggesting_strategy') if 'ebay_suggesting_strategy' in vals else rec.ebay_suggesting_strategy
+        ebay_amount_value =  vals.get('ebay_amount_value') if 'ebay_amount_value' in vals else rec.ebay_amount_value
+        ebay_amount_type =  vals.get('ebay_amount_type') if 'ebay_amount_type' in vals else rec.ebay_amount_type
+        query = self.env['ebay_suggesting_rules'].search_count([
+            ['ebay_suggesting_strategy', '=', ebay_suggesting_strategy],
+            ['ebay_amount_value', '=', ebay_amount_value],
+            ['ebay_amount_type', '=', ebay_amount_type]
+        ])
+        if query:
+            raise ValidationError("Rules has existed !")
+        vals = args[1]
         rec = super(Suggesting_Rules, self).write(vals)      
         return rec

@@ -80,6 +80,20 @@
                         </notebook>
                     </sheet>
                     <footer>
+                        <!-- Example single danger button -->
+                        <!-- Example single danger button -->
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-primary dropdown-toggle d-flex justify-content-between" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Action
+                            </button>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="#">Action</a>
+                                <a class="dropdown-item" href="#">Another action</a>
+                                <a class="dropdown-item" href="#">Something else here</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#">Separated link</a>
+                            </div>
+                        </div>
                         <canvas id="chart"></canvas>
                         <script type="text/javascript" src="/ebay_pricer_1/static/src/js/build_chart.js"/>
 
@@ -141,7 +155,8 @@
                                         <strong t-esc="record.ebay_title.value"/>
                                     </t>
                                     <div t-if="record.ebay_current_price.value">
-                                        <strong><field name="ebay_current_price" widget="monetary"/>$</strong>
+                                        <strong>
+                                            <field name="ebay_current_price" widget="monetary"/>$</strong>
                                     </div>
                                     <div t-if="record.ebay_automated_suggesting.raw_value">
                                         <span>Automated suggesting price</span>

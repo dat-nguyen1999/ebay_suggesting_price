@@ -66,4 +66,5 @@ var ctx = document.getElementById('chart').getContext('2d');
             }
         }
     };
+    console.log("123")
     drawSoilMoistureChart(parseInt(window.location.hash.split('&')[0].split('=')[1]), chart);
