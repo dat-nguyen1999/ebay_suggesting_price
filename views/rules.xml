@@ -113,7 +113,7 @@
             <field name="name">eBay Suggesting Rules </field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">ebay_suggesting_rules</field>
-            <field name="view_mode">kanban,tree,form,activity</field>
+            <field name="view_mode">tree,kanban,form</field>
         </record>
     </data>
 </odoo>

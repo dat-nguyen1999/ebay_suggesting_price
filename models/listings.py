@@ -67,30 +67,37 @@ class Listings(models.Model):
     ebay_UPC = fields.Char("UPC", size=13)
 
 
-    ebay_current_price = fields.Float('Current Price', readonly =True)
-    ebay_suggesting_price = fields.Float('Suggesting Price', readonly =True)
+    # ebay_current_price = fields.Float('Current Price', readonly =True)
+    ebay_suggesting_price = fields.Float('Suggested Price', readonly =True)
     ebay_competition_price = fields.Float('Competition Price', readonly =True)
     ebay_s_competitor = fields.Float("Super Competitor", readonly =True)
     ebay_min_price = fields.Float('Minimum Price', required=True)
     ebay_max_price = fields.Float('Maximum Price', required=True)
 
-    ebay_automated_accepting = fields.Boolean("Automated Accepting", default = True)
+    # ebay_automated_accepting = fields.Boolean("Automated Accepting", default = True)
     ebay_automated_suggesting = fields.Boolean("Automated Suggesting", default = True)
     ebay_interval_type = fields.Selection([
-        ('daily', 'Daily'),
-        ('hourly', 'Hourly'),
-        ('minutely', 'Minutely'),
+        ('day', 'Every Day'),
+        ('hour', 'Every Hour'),
+        ('minute', 'Every Minute'),
         ('custom', 'Custom')
-    ], string='Interval Type', default='hourly', required=True)
+    ], string='Interval Type', default='hour', required=True)
     ebay_interval_value = fields.Char("Interval Value", help="Interval Format e.g :'1h 30m'", default ="45m")
 
     interval_number = fields.Integer("Interval", compute='_period_in_minutes' )
-    ebay_next_call = fields.Datetime("Next call", readonly =True)
+    ebay_next_call = fields.Datetime("Next call")
 
     ebay_search_strategy = fields.Selection([
         ('keyword', 'Keyword'),
-        ('barcode', 'Barcode')
+        ('productId', 'Product ID')
         ], string='Search Strategy', default='keyword', required=True)
+    
+    def _default_keyword(self):
+        for rec in self:
+            print("123123123")
+            res = rec.ebay_title
+            print(res)
+            return res
     ebay_keyword = fields.Text("Keyword")
     ebay_instock = fields.Integer("In stock")
 
@@ -102,13 +109,14 @@ class Listings(models.Model):
     ################### Functions ##################################################################
     ################################################################################################
     ################ Compute #######################################################################
+    
     def _period_in_minutes(self):
         for record in self:
-            if record.ebay_interval_type == 'daily':
+            if record.ebay_interval_type == 'day':
                 record.interval_number = 24 * 60
-            elif record.ebay_interval_type == 'hourly':
+            elif record.ebay_interval_type == 'hour':
                 record.interval_number = 60
-            elif record.ebay_interval_type == 'minutely':
+            elif record.ebay_interval_type == 'minute':
                 record.interval_number = 1
             else:
                 interval_value_component = record.ebay_interval_value.split()
@@ -124,6 +132,11 @@ class Listings(models.Model):
         for record in self:
             if record.ebay_automated_suggesting:
                 record.ebay_next_call = datetime.now() + relativedelta(minutes = record.interval_number)
+    @api.onchange('ebay_keyword')
+    def _check_valid_keyword(self):
+        for record in self:
+            if record.ebay_keyword == '':
+                record.ebay_keyword = record.ebay_title
 
     @api.onchange('ebay_interval_type')
     def _compute_next_call_by_interval_type(self):
@@ -139,6 +152,13 @@ class Listings(models.Model):
                 print(record.interval_number)
                 record.ebay_next_call = datetime.now() + relativedelta(minutes=record.interval_number)
                 print(record.ebay_next_call)
+    @api.onchange('ebay_next_call')
+    def _check_valid_next_call(self):
+        for record in self:
+            print("change next call")
+            now = datetime.now()
+            if now >= record.ebay_next_call:
+                raise ValidationError("Next call value invalid!")
     ################ Constraints #######################################################################
 
     @api.constrains('ebay_min_price')
@@ -191,18 +211,6 @@ class Listings(models.Model):
                     if lit not in ['0','1','2','3','4','5','6','7','8','9']:
                         raise ValidationError("Interval format e.g: '30m' or '2h'")
 
-    # @api.depends('ebay_ePID', 'ebay_ISBN','ebay_EAN', 'ebay_UPC')
-    # def _check_selection_search_strategy(self):
-    #     for record in self:
-    #         if record.ebay_ePID or record.ebay_ISBN or record.ebay_EAN or record.ebay_UPC:
-    #             record.ebay_search_strategy = fields.Selection( selection_add = [
-    #                 ('barcode','Barcode')
-    #             ])
-    # @api.constrains('ebay_search_strategy', 'ebay_keyword')
-    # def _check_keyword(self):
-    #     for record in self:
-    #         if record.ebay_search_strategy == 'keyword':
-    #             raise ValidationError("Keyword must not empty!")
 
     
 
@@ -219,16 +227,16 @@ class Listings(models.Model):
 
     ################ Actions #######################################################################
 
-    def action_accept_suggesting_price(self):
-        for rec in self:
-            rec.write({
-                "ebay_current_price":rec.ebay_suggesting_price,
-            })
-            rec.itemIDs += self.env['ebay_listing.item'].create({
-                'price': rec.ebay_suggesting_price,
-                'current_price': rec.ebay_current_price,
-                's_competitor': rec.ebay_s_competitor
-            })
+    # def action_accept_suggesting_price(self):
+    #     for rec in self:
+    #         rec.write({
+    #             "ebay_current_price":rec.ebay_suggesting_price,
+    #         })
+    #         rec.itemIDs += self.env['ebay_listing.item'].create({
+    #             'price': rec.ebay_suggesting_price,
+    #             'current_price': rec.ebay_current_price,
+    #             's_competitor': rec.ebay_s_competitor
+    #         })
     def build_request(self,rec):
         request = {}
         if rec.ebay_search_strategy == 'keyword':
@@ -251,7 +259,7 @@ class Listings(models.Model):
                 type_value = 'ePID'
                 text_value = rec.ebay_ePID
             else:
-                raise ValidationError("Barcode is empty!")
+                raise ValidationError("ProductID is empty!")
 
             request['productId'] = {
                 '#text': text_value,
@@ -337,12 +345,12 @@ class Listings(models.Model):
                         rec.ebay_suggesting_price = suggesting_price
                     rec.ebay_s_competitor = super_competition_price     #   update super competition price
                     rec.ebay_competition_price = my_competitor          #   update competition price
-                    if rec.ebay_automated_accepting:
-                        rec.ebay_current_price = suggesting_price       #   update automated current price
+                    # if rec.ebay_automated_accepting:
+                    #     rec.ebay_current_price = suggesting_price       #   update automated current price
                     rec.ebay_next_call = datetime.now() + relativedelta(minutes=rec.interval_number)    # update next call
                     rec.itemIDs += self.env['ebay_listing.item'].create({
                         'price': suggesting_price,
-                        'current_price': rec.ebay_current_price,  # update in the future
+                        #'current_price': rec.ebay_current_price,  # update in the future
                         's_competitor': super_competition_price
                     })
                     break
@@ -364,7 +372,11 @@ class Listings(models.Model):
                 now = datetime.now()
                 if now >= listing.ebay_next_call:
                     self._action_suggesting_price(listing)
-
+    @api.model
+    def create(self, vals):
+        vals['ebay_keyword'] = vals['ebay_title']
+        rec = super(Listings, self).create(vals)      
+        return rec
 
 
 class ListingItems(models.Model):

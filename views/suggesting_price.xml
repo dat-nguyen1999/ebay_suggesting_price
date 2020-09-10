@@ -8,8 +8,8 @@
             <field name="arch" type="xml">
                 <form>
                     <header>
-                        <button name="action_suggesting_price" type='object' string='Get Suggesting Price' class="btn btn-success" />
-                        <button name="action_accept_suggesting_price" type='object' string='Accept Suggesting Price' class="btn btn-success" />
+                        <button name="action_suggesting_price" type='object' string='Suggest Price Manually' class="btn btn-success" />
+                        <!-- <button name="action_accept_suggesting_price" type='object' string='Accept Suggesting Price' class="btn btn-success" /> -->
                     </header>
                     <sheet>
                         <div class="oe_title">
@@ -33,39 +33,33 @@
                         <notebook>
                             <pages string="Price">
                                 <group colspan="2">
-                                    <h2>
                                         <group>
                                             <field name="ebay_suggesting_price" style="font-weight: bold;"/>
-                                            <field name="ebay_current_price" style="font-weight: bold;"/>
+                                            <!-- <field name="ebay_current_price" style="font-weight: bold;"/> -->
                                             <field name="ebay_competition_price" style="font-weight: bold;"/>
                                             <field name="ebay_s_competitor" style="font-weight: bold;"/>
                                             <field name="ebay_min_price"/>
                                             <field name="ebay_max_price"/>
                                         </group>
-                                    </h2>
-                                    <h2>
                                         <group>
-                                            <field name="ebay_automated_accepting"/>
+                                            <!-- <field name="ebay_automated_accepting"/> -->
                                             <field name="ebay_automated_suggesting"/>
                                             <field name="ebay_interval_type"/>
                                             <field name="ebay_interval_value" attrs="{'invisible': [('ebay_interval_type','in',('daily','hourly','minutely'))] }"/>
                                             <field name="ebay_next_call"/>
                                             <field name="ebay_repricer" style="font-weight: bold;"/>
                                             <field name="ebay_search_strategy" />
-                                            <field name="ebay_keyword" attrs="{'invisible': [('ebay_search_strategy','=','barcode')] }"/>
+                                            <field name="ebay_keyword" attrs="{'invisible': [('ebay_search_strategy','=','productId')] }"/>
                                         </group>
-                                    </h2>
                                 </group>
                             </pages>
                             <pages string="Product ID">
-                                <h2>
                                     <group>
                                         <field name="ebay_ePID"/>
                                         <field name="ebay_ISBN"/>
                                         <field name="ebay_UPC"/>
                                         <field name="ebay_EAN"/>
                                     </group>
-                                </h2>
                             </pages>
                             <pages string="History">
                                 <field name="itemIDs">
@@ -83,7 +77,7 @@
                         <!-- Example single danger button -->
                         <!-- Example single danger button -->
 
-                        <button id="chart_button" class="btn btn-success" />
+                        
                         
                         <canvas id="chart"></canvas>
                         <script type="text/javascript" src="/ebay_pricer_1/static/src/js/build_chart.js"/>
@@ -113,10 +107,10 @@
                     <field name="ebay_min_price"/>
                     <field name="ebay_max_price"/>
                     <field name="ebay_competition_price"/>
-                    <field name="ebay_current_price"/>
+                    <!-- <field name="ebay_current_price"/> -->
                     <field name="ebay_suggesting_price"/>
                     <field name="ebay_automated_suggesting" />
-                    <field name="ebay_automated_accepting" />
+                    <!-- <field name="ebay_automated_accepting" /> -->
                 </tree>
             </field>
         </record>
@@ -131,10 +125,10 @@
                     <field name="ebay_title"/>
                     <field name="ebay_category_id"/>
 
-                    <field name="ebay_current_price"/>
-
+                    <!-- <field name="ebay_current_price"/> -->
+                    <field name="ebay_suggesting_price"/>
                     <field name="ebay_automated_suggesting" />
-                    <field name="ebay_automated_accepting" />
+                    <!-- <field name="ebay_automated_accepting" /> -->
 
                     <templates>
                         <t t-name="kanban-box">
@@ -147,17 +141,21 @@
                                     <t class="o_kanban_record_title">
                                         <strong t-esc="record.ebay_title.value"/>
                                     </t>
-                                    <div t-if="record.ebay_current_price.value">
+                                    <!-- <div t-if="record.ebay_current_price.value">
                                         <strong>
                                             <field name="ebay_current_price" widget="monetary"/>
 $</strong>
+                                    </div> -->
+                                    <div t-if="record.ebay_suggesting_price.value">
+                                        <strong>
+                                            $<field name="ebay_suggesting_price" widget="monetary"/></strong>
                                     </div>
                                     <div t-if="record.ebay_automated_suggesting.raw_value">
                                         <span>Automated suggesting price</span>
                                     </div>
-                                    <div t-if="record.ebay_automated_accepting.raw_value">
+                                    <!-- <div t-if="record.ebay_automated_accepting.raw_value">
                                         <span>Automated accepting price</span>
-                                    </div>
+                                    </div> -->
                                 </div>
                             </div>
                         </t>
@@ -171,7 +169,8 @@ $</strong>
             <field name="name">eBay Product Listings </field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">ebay_listing</field>
-            <field name="view_mode">kanban,tree,form,activity</field>
+            <field name="limit">150</field>
+            <field name="view_mode">kanban,tree,form</field>
         </record>
 
         <!-- Cron Action-->
