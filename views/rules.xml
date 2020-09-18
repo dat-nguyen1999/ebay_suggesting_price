@@ -11,39 +11,45 @@
                         <!--                        <button name="update_current_price" type='object' string='Reprice' class="btn btn-success" />-->
                     </header>
                     <sheet>
+                        <div class="oe_button_box" name="button_box">
+                        
+                            <button name="action_view_listings" type="object" class="oe_stat_button" icon="fa-pencil-square-o" attrs="{'invisible': [('listing_count', '=', 0)]}">
+                                 <field name="listing_count" widget="statinfo" string="Listings"/>
+                            </button>
+                        </div>
                         <div class="oe_title">
                             <h1 class="text-primary">
                                 <b>
-                                    <field name="rname" placeholder="e.g. Below 1$" />
+                                    <field name="rname" placeholder="e.g. Below $1" />
                                 </b>
                             </h1>
                         </div>
                         <group >
                             <group colspan="2">
-                                <h2>
-                                    <group>
-                                        <field name="ebay_suggesting_strategy" style="font-weight: bold;"/>
-                                    </group>
-                                </h2>
-                                <h2>
-                                    <group>
-                                        <field name="ebay_amount_type" style="font-weight: bold;" attrs="{'invisible':[('ebay_suggesting_strategy','=','matching')]}"/>
-                                        <field name="ebay_amount_value" style="font-weight: bold;" attrs="{'invisible':[('ebay_suggesting_strategy','=','matching')]}"/>
-                                    </group>
-                                </h2>
+                                <group>
+                                    <field name="ebay_suggesting_strategy" style="font-weight: bold;"/>
+                                    <field name="ebay_amount_type" style="font-weight: bold;" attrs="{'invisible':[('ebay_suggesting_strategy','=','matching')]}"/>
+                                    <field name="ebay_amount_value" style="font-weight: bold;" attrs="{'invisible':[('ebay_suggesting_strategy','=','matching')]}"/>
+                                </group>
+                                <group>
+                                    <label for="ebay_rule_message" invisible="1"/>
+                                    <div>
+                                        <field name="ebay_rule_message" readonly="1"/>
+                                    </div>
+                                </group>
 
                             </group>
                         </group>
-                        <notebook>
-                            <pages string="Listings">
-                                <field name="ebay_listings">
-                                    <tree>
-                                        <field name="ebay_title" />
-                                        <field name="ebay_category_id" />
-                                    </tree>
-                                </field>
-                            </pages>
-                        </notebook>
+<!--                        <notebook>-->
+<!--                            <pages string="Listings">-->
+<!--                                <field name="ebay_listings" readonly="1">-->
+<!--                                    <tree>-->
+<!--                                        <field name="ebay_title" />-->
+<!--                                        <field name="ebay_category_id" />-->
+<!--                                    </tree>-->
+<!--                                </field>-->
+<!--                            </pages>-->
+<!--                        </notebook>-->
                     </sheet>
                     <div class="oe_chatter">
                         <field name="message_follower_ids" widget="mail_followers"/>

@@ -68,18 +68,18 @@ class Listings(models.Model):
 
 
     # ebay_current_price = fields.Float('Current Price', readonly =True)
-    ebay_suggesting_price = fields.Float('Suggested Price', readonly =True)
-    ebay_competition_price = fields.Float('Competition Price', readonly =True)
+    ebay_suggesting_price = fields.Float('Suggested', readonly =True)
+    ebay_competition_price = fields.Float('My Competition', readonly =True)
     ebay_s_competitor = fields.Float("Super Competitor", readonly =True)
-    ebay_min_price = fields.Float('Minimum Price', required=True)
-    ebay_max_price = fields.Float('Maximum Price', required=True)
+    ebay_min_price = fields.Float('Minimum', required=True)
+    ebay_max_price = fields.Float('Maximum', required=True)
 
     # ebay_automated_accepting = fields.Boolean("Automated Accepting", default = True)
     ebay_automated_suggesting = fields.Boolean("Automated Suggesting", default = True)
     ebay_interval_type = fields.Selection([
         ('day', 'Every Day'),
         ('hour', 'Every Hour'),
-        ('minute', 'Every Minute'),
+        ('30m', 'Every Half Hour'),
         ('custom', 'Custom')
     ], string='Interval Type', default='hour', required=True)
     ebay_interval_value = fields.Char("Interval Value", help="Interval Format e.g :'1h 30m'", default ="45m")
@@ -103,7 +103,20 @@ class Listings(models.Model):
 
     itemIDs = fields.One2many("ebay_listing.item", "listId", readonly =True )    # , readonly =True
     ebay_repricer = fields.Many2one("ebay_suggesting_rules","Repricing Rules")
+    competitionIDs = fields.One2many("competitions", "listingID", readonly =True )    # , readonly =True
+    competition_count = fields.Integer(string='Competition Count', compute='_get_competition_count', readonly=True)
 
+    # currency_id = fields.Many2one('res.currency', 'Currency',
+    #                               default=lambda self: self.env.user.company_id.currency_id, required=True)
+    # currency_id = fields.Many2one('res.currency', 'Currency',
+    #                               default=2, required=True)
+
+    ebay_automated_rouding = fields.Boolean("Automated Rounding", default=True)
+    ebay_rouding_strategy = fields.Selection([
+        ('9', 'Price Nearest 9'),
+        ('.99', 'Price Nearest .99'),
+        ('.49', 'Price Nearest .49')
+    ], string='Rouding Strategy', default='.99', required=True)
 
     ################################################################################################
     ################### Functions ##################################################################
@@ -116,15 +129,19 @@ class Listings(models.Model):
                 record.interval_number = 24 * 60
             elif record.ebay_interval_type == 'hour':
                 record.interval_number = 60
-            elif record.ebay_interval_type == 'minute':
-                record.interval_number = 1
+            elif record.ebay_interval_type == '30m':
+                record.interval_number = 30
             else:
                 interval_value_component = record.ebay_interval_value.split()
                 if len(interval_value_component) == 2:
                     record.interval_number = int(interval_value_component[0][:-1]) * 60 + int(interval_value_component[1][:-1])
                 else:
                     record.interval_number = int(interval_value_component[0][:-1]) * 60 if interval_value_component[0][-1] == 'h' else int(interval_value_component[0][:-1])
-
+    def _get_competition_count(self):
+        for record in self:
+            record.competition_count = self.env['competitions'].search_count([
+            ['listingID', '=', record.id]
+        ])
     ################ Onchange #######################################################################
 
     @api.onchange('ebay_automated_suggesting')
@@ -192,24 +209,29 @@ class Listings(models.Model):
             if len(interval_component) >= 3:
                 raise ValidationError("Interval format e.g: '1h 30m'")
             elif len(interval_component) == 2:
-                if interval_component[0][-1] != 'h' or interval_component[1][-1] != 'm':
+                if interval_component[0][-1] != 'h' or interval_component[1][-1] != 'm':            # if != 'h' or 'm' 
                     raise ValidationError("Interval format e.g: '1h 30m'")
-                for lit in interval_component[0][:-1]:
+                for lit in interval_component[0][:-1]:                                              # check literal type first index
                     if lit not in ['0','1','2','3','4','5','6','7','8','9']:
-                        raise ValidationError("Interval format e.g: '1h 30m'")
-                if int(interval_component[0][:-1]) < 0 and int(interval_component[0][:-1]) > 23:
-                    raise ValidationError("Interval format e.g: '1h 30m'")
-                for lit in interval_component[1][:-1]:
+                        raise ValidationError("Hour value invalid, must be integer, Interval format e.g: '1h 30m'")
+                if int(interval_component[0][:-1]) < 0 and int(interval_component[0][:-1]) > 23:    # negative value hour
+                    raise ValidationError("Hour value invalid!")
+                for lit in interval_component[1][:-1]:                                              # check literal type second index
                     if lit not in ['0','1','2','3','4','5','6','7','8','9']:
-                        raise ValidationError("Interval format e.g: '1h 30m'")
-                if int(interval_component[1][:-1]) < 0 and int(interval_component[1][:-1]) > 59:
-                    raise ValidationError("Interval format e.g: '1h 30m'")
+                        raise ValidationError("Minute value invalid, must be integer, Interval format e.g: '1h 30m'")
+                if int(interval_component[1][:-1]) < 0 and int(interval_component[1][:-1]) > 59:    # negative value minute
+                    raise ValidationError("Minute value invalid")
+                if int(interval_component[0][:-1]) == 0 and int(interval_component[1][:-1]) < 30:
+                    raise ValidationError("Min Interval value at least 30 minutes!")
             else:
-                if interval_component[0][-1] not in ['h','m']:
-                    raise ValidationError("Interval format e.g: '30m' or '2h'")
+                if interval_component[0][-1] not in ['h','m']:                                      # minute or hour
+                    raise ValidationError("Wrong interval format, e.g: '30m' or '2h'")
                 for lit in interval_component[0][:-1]:
                     if lit not in ['0','1','2','3','4','5','6','7','8','9']:
-                        raise ValidationError("Interval format e.g: '30m' or '2h'")
+                        raise ValidationError("Invalid value, Interval format e.g: '30m' or '2h'")
+                if interval_component[0][-1] == 'm':
+                    if int(interval_component[0][:-1]) < 30:
+                        raise ValidationError("Min Interval value at least 30 minutes!")
 
 
     
@@ -279,25 +301,47 @@ class Listings(models.Model):
             'pageNumber': 1
         }
         request['sortOrder'] = 'PricePlusShippingLowest'
+        request['outputSelector'] = 'SellerInfo'
         print(request)
         return request
 
     def compute_suggesting_price(self, rec, my_competitor):
-        try:
-            rules = rec.ebay_repricer.rname.split()     # rules format e.g ['Above', '1.5', '$']
-        except AttributeError as e:
-            print(e)
+
+        if isinstance(rec.ebay_repricer.rname,bool):
+            raise ValidationError("Please choose the rule!")
+
+        rules = rec.ebay_repricer.rname.split()  # rules format e.g ['Above', '$1.5'] or ['Below', '5%'] or ['Matching']
 
         if rules[0] == 'Matching':
             return str(my_competitor)
         else:
             if rules[0] == 'Below':
-                my_competitor -= float(rules[1]) if rules[2] == '$' else my_competitor * float(rules[1]) / 100.00
+                my_competitor -= float(rules[1][1:]) if rules[1][0] == '$' else my_competitor * float(rules[1][:-1]) / 100.00
             else:
-                my_competitor += float(rules[1]) if rules[2] == '$' else my_competitor * float(rules[1]) / 100.00
-            my_competitor = round(my_competitor,2)
+                my_competitor += float(rules[1][1:]) if rules[1][0] == '$' else my_competitor * float(rules[1][-1]) / 100.00
+            if rec.ebay_automated_rouding:
+                if rec.ebay_rouding_strategy == '9':
+                    my_competitor = int(my_competitor/10)*10 + 9
+                elif rec.ebay_rouding_strategy == '.99':
+                    my_competitor = int(my_competitor) + 0.99
+                else:
+                    my_competitor = int(my_competitor) + 0.49
+            else:
+                my_competitor = round(my_competitor,2)
             return str(my_competitor)
+    def _create_competitions_db(self, rec, listing):
 
+        rec.competitionIDs += self.env['competitions'].create({
+            'title':    listing.title,
+            'URL':      listing.viewItemURL,
+            'sellerUserName':   listing.sellerInfo.sellerUserName,
+            'positiveFeedbackPercent': listing.sellerInfo.positiveFeedbackPercent,
+            'topRatedSeller':   True if listing.sellerInfo.topRatedSeller == 'true' else False,
+            'current_price':    listing.sellingStatus.currentPrice.value,
+            'shippingType':     listing.shippingInfo.shippingType,
+            'shippingServiceCost': listing.shippingInfo.shippingServiceCost.value if listing.shippingInfo.get('shippingServiceCost') else 'inf',
+            'total_cost': str(round(float(listing.sellingStatus.currentPrice.value) + float(listing.shippingInfo.shippingServiceCost.value),2)) if listing.shippingInfo.get('shippingServiceCost') else 'inf'
+        })
     def _action_suggesting_price(self,rec):
         request = self.build_request(rec)
         try:
@@ -308,7 +352,7 @@ class Listings(models.Model):
                 siteid=self.env['ebay.site'].search([('id', '=', int(self.env['ir.config_parameter'].sudo().get_param('ebay_site')))], limit=1).name.split()[0],
                 https=True,
             )
-            time.sleep(0.1)
+            time.sleep(0.01)
         except ConnectionError as e:
             print(e)
             print(e.response.dict())
@@ -322,41 +366,91 @@ class Listings(models.Model):
             super_competition_price = float('inf')                              # set super price = inf
             if response.reply.searchResult._count == '0':                       # check list of result, if result is empty, _count = '0'
                 raise ValidationError("Not found Items!!")                      # raise Error
-            for listing in response.reply.searchResult.item:            
+            isCalculated = True
+            for listing in response.reply.searchResult.item:                    # handle suggested price
                 if listing.shippingInfo.get('shippingServiceCost'):             # if shippingServiceCost is exist
                     my_competitor = float(listing.sellingStatus.currentPrice.value) + float(
                         listing.shippingInfo.shippingServiceCost.value)
-                else:
-                    my_competitor = float(listing.sellingStatus.currentPrice.value) # shippingType Calculated
-                super_competition_price = my_competitor if my_competitor < super_competition_price else super_competition_price
+                    super_competition_price = my_competitor if my_competitor < super_competition_price else super_competition_price
 
-                if my_competitor < rec.ebay_min_price:
-                    continue
-                elif my_competitor >= rec.ebay_min_price and my_competitor <= rec.ebay_max_price:
-                    suggesting_price = self.compute_suggesting_price(rec, my_competitor)
-                    # print(suggesting_price)
-                    # print(rec.ebay_min_price)
-                    # print(rec.ebay_min_price)
-                    if float(suggesting_price) >= rec.ebay_min_price and float(
-                            suggesting_price) <= rec.ebay_max_price:    # suggesting price in [min.max]
-                        rec.ebay_suggesting_price = suggesting_price    # update suggesting price
+                    isCalculated = False
+
+                    if my_competitor < rec.ebay_min_price:
+                        continue
+                    elif my_competitor >= rec.ebay_min_price and my_competitor <= rec.ebay_max_price:
+                        suggesting_price = self.compute_suggesting_price(rec, my_competitor)
+                        # print(suggesting_price)
+                        # print(rec.ebay_min_price)
+                        # print(rec.ebay_min_price)
+                        if float(suggesting_price) >= rec.ebay_min_price and float(
+                                suggesting_price) <= rec.ebay_max_price:    # suggesting price in [min.max]
+                            rec.ebay_suggesting_price = suggesting_price    # update suggesting price
+                        else:
+                            suggesting_price = rec.ebay_min_price
+                            rec.ebay_suggesting_price = suggesting_price
+                        rec.ebay_s_competitor = super_competition_price     #   update super competition price
+                        rec.ebay_competition_price = my_competitor          #   update competition price
+                        # if rec.ebay_automated_accepting:
+                        #     rec.ebay_current_price = suggesting_price       #   update automated current price
+                        rec.ebay_next_call = datetime.now() + relativedelta(minutes=rec.interval_number)    # update next call
+                        rec.itemIDs += self.env['ebay_listing.item'].create({
+                            'price': suggesting_price,
+                            #'current_price': rec.ebay_current_price,  # update in the future
+                            's_competitor': super_competition_price,
+                            'min_price' : rec.ebay_min_price,
+                            'max_price' : rec.ebay_max_price,
+                            'search_type': dict(rec._fields['ebay_search_strategy'].selection).get(rec.ebay_search_strategy)
+                        })
+                        break
                     else:
-                        suggesting_price = rec.ebay_min_price
-                        rec.ebay_suggesting_price = suggesting_price
-                    rec.ebay_s_competitor = super_competition_price     #   update super competition price
-                    rec.ebay_competition_price = my_competitor          #   update competition price
-                    # if rec.ebay_automated_accepting:
-                    #     rec.ebay_current_price = suggesting_price       #   update automated current price
-                    rec.ebay_next_call = datetime.now() + relativedelta(minutes=rec.interval_number)    # update next call
-                    rec.itemIDs += self.env['ebay_listing.item'].create({
-                        'price': suggesting_price,
-                        #'current_price': rec.ebay_current_price,  # update in the future
-                        's_competitor': super_competition_price
-                    })
-                    break
+                        rec.ebay_next_call += relativedelta(minutes=rec.interval_number)  # update next call
+                        break
+
+
                 else:
-                    rec.ebay_next_call += relativedelta(minutes=rec.interval_number)  # update next call
-                    break
+                    pass
+                    # my_competitor = float('-inf')
+                    #my_competitor = float(listing.sellingStatus.currentPrice.value) # shippingType Calculated
+
+                
+            if isCalculated:
+                for listing in response.reply.searchResult.item:
+                    my_competitor = float(listing.sellingStatus.currentPrice.value) # shippingType Calculated
+                    super_competition_price = my_competitor if my_competitor < super_competition_price else super_competition_price
+
+                    if my_competitor < rec.ebay_min_price:
+                        continue
+                    elif my_competitor >= rec.ebay_min_price and my_competitor <= rec.ebay_max_price:
+                        suggesting_price = self.compute_suggesting_price(rec, my_competitor)
+                        # print(suggesting_price)
+                        # print(rec.ebay_min_price)
+                        # print(rec.ebay_min_price)
+                        if float(suggesting_price) >= rec.ebay_min_price and float(
+                                suggesting_price) <= rec.ebay_max_price:    # suggesting price in [min.max]
+                            rec.ebay_suggesting_price = suggesting_price    # update suggesting price
+                        else:
+                            suggesting_price = rec.ebay_min_price
+                            rec.ebay_suggesting_price = suggesting_price
+                        rec.ebay_s_competitor = super_competition_price     #   update super competition price
+                        rec.ebay_competition_price = my_competitor          #   update competition price
+                        # if rec.ebay_automated_accepting:
+                        #     rec.ebay_current_price = suggesting_price       #   update automated current price
+                        rec.ebay_next_call = datetime.now() + relativedelta(minutes=rec.interval_number)    # update next call
+                        rec.itemIDs += self.env['ebay_listing.item'].create({
+                            'price': suggesting_price,
+                            #'current_price': rec.ebay_current_price,  # update in the future
+                            's_competitor': super_competition_price
+                        })
+                        break
+                    else:
+                        rec.ebay_next_call += relativedelta(minutes=rec.interval_number)  # update next call
+                        break
+            self.env.cr.execute("""
+                DELETE FROM public.competitions
+	                WHERE "listingID" = %s;
+            """, [rec.id])
+            for listing in response.reply.searchResult.item:
+                self._create_competitions_db(rec, listing)
         elif response.reply.ack == 'Failure':
             raise ValidationError(response.reply.errorMessage.error.message)
         else:
@@ -372,6 +466,25 @@ class Listings(models.Model):
                 now = datetime.now()
                 if now >= listing.ebay_next_call:
                     self._action_suggesting_price(listing)
+    
+    
+    def action_view_competition(self):
+        return{
+            'name': 'Competitions',
+            'view_mode': 'tree',
+            'res_model': 'competitions',
+            'type': 'ir.actions.act_window',
+            'domain': [('listingID','=',self.id)]
+        }
+    def action_graph_view(self):
+        return {
+            'name': 'Graph',
+            'view_mode': 'graph',
+            'res_model': 'ebay_listing.item',
+            'type': 'ir.actions.act_window',
+            'domain': [('listId', '=', self.id)]
+        }
+    
     @api.model
     def create(self, vals):
         vals['ebay_keyword'] = vals['ebay_title']
@@ -387,6 +500,10 @@ class ListingItems(models.Model):
 
     listId = fields.Many2one("ebay_listing", "Listing Id", ondelete='cascade' )
     price = fields.Float("Suggesting Price" )
-    current_price = fields.Float("Current Price")
+    # current_price = fields.Float("Current Price")
     s_competitor = fields.Float("Super Competitor")
-
+    min_price = fields.Float("Min Price")
+    max_price = fields.Float("Max Price")
+    search_type = fields.Char("Search Strategy")
+    currency_id = fields.Many2one('res.currency', 'Currency',
+                                  default=2, required=True)

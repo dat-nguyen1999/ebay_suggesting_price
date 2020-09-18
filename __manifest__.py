@@ -13,11 +13,13 @@
     'external_dependencies': {'python': ['ebaysdk']},
     'data': [
         'security/ir.model.access.csv',
+        'views/importChartJS.xml',
+        'views/history.xml',
+        'views/competitions.xml',
         'views/suggesting_price.xml',
         'views/rules.xml',
         'views/ebay_settings.xml',
         'views/menuItem.xml',
-        'views/importChartJS.xml',
     ], # liên quan đến view, các file xml
     'qweb': ['static/src/xml/hello_world.xml'],
     'installable': True,    # cài đặt được

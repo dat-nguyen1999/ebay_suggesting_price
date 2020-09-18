@@ -44,14 +44,17 @@ class Suggesting_Rules(models.Model):
     ebay_suggesting_strategy = fields.Selection([
         ('matching', 'Matching'),
         ('below', 'Below'),
-        ('above', 'Above'),], string='Suggesting Strategy', default='below')
+        ('above', 'Above'),], string='Suggesting Strategy', default='below', required = True)
     ebay_amount_type = fields.Selection([
-        ('%','%'),
-        ('$','$')], string='Amount Type', default='$')
-    ebay_amount_value = fields.Float('Amount value')
+        ('%','Percentage'),
+        ('$','Amount')], string='Type', default='$', required = True)
+    ebay_amount_value = fields.Float('Value')
     ebay_top_rate_option = fields.Boolean("Top rate option")
+    ebay_rule_message = fields.Html(compute='_compute_action_message')
 
     ebay_listings = fields.One2many("ebay_listing", "ebay_repricer")
+
+    listing_count = fields.Integer(string='Listing Count', compute='_get_listing_count', readonly=True)
 
 
     #### Constraints######
@@ -65,25 +68,41 @@ class Suggesting_Rules(models.Model):
     @api.depends('ebay_suggesting_strategy','ebay_amount_type','ebay_amount_value')
     def _set_ebay_rule_name(self):
         for rec in self:
-            # count = self.env['ebay_suggesting_rules'].search_count([
-            #     ['ebay_suggesting_strategy', '=', rec.ebay_suggesting_strategy],
-            #     ['ebay_amount_value', '=', rec.ebay_amount_value],
-            #     ['ebay_amount_type', '=', rec.ebay_amount_type]
-            # ])
-            # print(count)
-            # if count != 1:
-            #     raise ValidationError("Rules has existed !")
             if rec.ebay_suggesting_strategy != 'matching':
-                rec.rname = dict(rec._fields['ebay_suggesting_strategy'].selection).get(rec.ebay_suggesting_strategy) + ' ' + str(rec.ebay_amount_value) + ' ' + dict(rec._fields['ebay_amount_type'].selection).get(rec.ebay_amount_type)
+                rec.rname = dict(rec._fields['ebay_suggesting_strategy'].selection).get(rec.ebay_suggesting_strategy) + ' ' + ((rec.ebay_amount_type + str(rec.ebay_amount_value)) if rec.ebay_amount_type == '$' else ( str(rec.ebay_amount_value) + rec.ebay_amount_type))
             else:
                 rec.rname = dict(rec._fields['ebay_suggesting_strategy'].selection).get(rec.ebay_suggesting_strategy)
-
+    
+    
+    @api.depends('ebay_suggesting_strategy','ebay_amount_type','ebay_amount_value')
+    def _compute_action_message(self):
+        for rec in self:
+            if rec.ebay_suggesting_strategy == 'matching':
+                rec.ebay_rule_message = ('Compete with the listing which has the lowest price by pricing <b>match its price</b>.')
+            else:
+                rec.ebay_rule_message = 'Compete with the listing which has the lowest price by pricing <b>%s</b> them by %s of <b>%s</b> '%(
+                    dict(rec._fields['ebay_suggesting_strategy'].selection).get(rec.ebay_suggesting_strategy),
+                    ('an ' if rec.ebay_amount_type =='$' else 'the ') + '<b>%s</b>'%(dict(rec._fields['ebay_amount_type'].selection).get(rec.ebay_amount_type)),
+                    ((rec.ebay_amount_type + str(rec.ebay_amount_value)) if rec.ebay_amount_type == '$' else ( str(rec.ebay_amount_value) + rec.ebay_amount_type))
+                )
     # def name_get(self):
     #     result = []
     #     for rec in self:
     #         name = rec.rname + " ID_" + str(rec.id)
     #         result.append((rec.id, name))
     #     return result
+    def _get_listing_count(self):
+        for record in self:
+            record.listing_count = len(record.ebay_listings)
+    def action_view_listings(self):
+        print(self)
+        return{
+            'name': 'Listings',
+            'view_mode': 'tree',
+            'res_model': 'ebay_listing',
+            'type': 'ir.actions.act_window',
+            'domain': [('ebay_repricer','=',self.id)]
+        }
 
     @api.model
     def create(self, vals):

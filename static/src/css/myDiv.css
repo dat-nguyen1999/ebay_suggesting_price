@@ -1,0 +1,28 @@
+#myDiv.fullscreen{
+    z-index: 9999;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+#myDiv{background:#F9F9F9}
+#btn_resize{
+    width: 100%;
+    height: 100%;
+    background-position: center center;
+    background-size: cover;
+    background-image:url("/ebay_pricer_1/static/src/img/big.png");
+}
+#btn_resize.fullscreen{
+    width: 100%;
+    height: 100%;
+    background-position: center center;
+    background-size: cover;
+    background-image:url('/ebay_pricer_1/static/src/img/small.png');
+}
+#filter_chart{
+    min-width: 100px;
+}
+
+

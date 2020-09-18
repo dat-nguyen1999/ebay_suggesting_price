@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_order_product_graph" model="ir.ui.view">
+            <field name="name">ebay_listing.item.graph</field>
+            <field name="model">ebay_listing.item</field>
+            <field name="arch" type="xml">
+                <graph string="Graph" type="line">
+                    <field name="create_date" type="row" interval="hour"/>
+                    <field name="price" />
+                    <field name="s_competitor"/>
+                    <field name="min_price" />
+                    <field name="max_price" type="measure"/>
+                </graph>
+            </field>
+        </record>
+        <!-- List Action-->
+        <record id="action_ebay_product_listing_item" model="ir.actions.act_window">
+            <field name="name">eBay Product Listings </field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">ebay_listing.item</field>
+            <field name="view_mode">graph</field>
+        </record>
+    </data>
+</odoo>
