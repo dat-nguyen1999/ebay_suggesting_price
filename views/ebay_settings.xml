@@ -7,31 +7,22 @@
             <field name="inherit_id" ref="base.res_config_settings_view_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//div[hasclass('settings')]" position="inside">
-                    <div class="app_settings_block" data-string="eBay Suggesting Price" string="eBay Suggesting Price" data-key="ebay_pricer_1">
+                    <div class="app_settings_block" data-string="eBay Suggest Price" string="eBay Suggest Price" data-key="ebay_pricer_1">
                         <h2>eBay</h2>
                         <div class="row mt16 o_settings_container">
                     <div class="col-12 col-lg-6 o_setting_box">
                         <div class="o_setting_right_pane">
                             <span class="o_form_label">eBay Account</span>
                             <div class="content-group">
-                                <div class="row">
-                                    <label for="ebay_dev_id" class="col-lg-4 o_light_label"/>
-                                    <field name="ebay_dev_id" class="col-lg-8 oe_inline"/>
-                                </div>
+
 
                                 <div attrs="{'invisible': [('ebay_domain','=', 'sand')]}">
-                                    <div class="row">
-                                        <label for="ebay_prod_token" class="col-lg-4 o_light_label"/>
-                                        <field name="ebay_prod_token" class="col-lg-8 oe_inline"/>
-                                    </div>
+
                                     <div class="row">
                                         <label for="ebay_prod_app_id" class="col-lg-4 o_light_label"/>
                                         <field name="ebay_prod_app_id" class="col-lg-8 oe_inline"/>
                                     </div>
-                                    <div class="row">
-                                        <label for="ebay_prod_cert_id" class="col-lg-4 o_light_label"/>
-                                        <field name="ebay_prod_cert_id" class="col-lg-8 oe_inline"/>
-                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -46,10 +37,6 @@
                                 <div class="row mt16">
                                     <label for="ebay_site" class="col-lg-4 o_light_label" />
                                     <field name="ebay_site" class="col-lg-8 oe_inline" options="{'no_create': True, 'no_open': True}"/>
-                                </div>
-                                <div class="row">
-                                    <label for="ebay_currency" string="Currency" class="col-lg-4 o_light_label"/>
-                                    <field name="ebay_currency" class="col-lg-8 oe_inline"/>
                                 </div>
                             </div>
                         </div>

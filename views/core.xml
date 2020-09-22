@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="assets1" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" type="text/css" href="/ebay_pricer_1/static/src/css/myDiv.css"/>
+            <script type="text/javascript" src="/ebay_pricer_1/static/src/js/script.js"/>
+        </xpath>
+    </template>
+</odoo>

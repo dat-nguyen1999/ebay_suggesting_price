@@ -1,0 +1,21 @@
+<template>
+    <t t-name="basic_graph">
+        <div id="myDiv">
+            <div class="d-flex justify-content-end">
+                <div class="p-2">
+                    <select name="filter_chart" id="filter_chart">
+                        <option value="day">This Day</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                </div>
+                <div class="p-2">
+                    <button id="btn_resize"></button>
+
+                </div>
+            </div>
+
+            <canvas id="chart"></canvas>
+        </div>
+    </t>
+</template>

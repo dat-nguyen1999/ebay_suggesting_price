@@ -28,11 +28,11 @@
                         </div>
                         <group >
                             <group colspan="2">
-                                <group>
-                                    <field name="ebay_category_id" options="{'no_create': True, 'no_open': True}"/>
-                                    <field name="ebay_URL" />
+                                <group colspan="1">
+                                    <field name="ebay_category_id"/>
+                                    <field name="ebay_URL" widget="html"/>
                                 </group>
-                                <group>
+                                <group colspan="1">
                                     <field name="ebay_listing_image" widget="image" width="90px" height="90px"/>
                                 </group>
                             </group>
@@ -41,35 +41,19 @@
                             <pages string="Price">
                                 <group colspan="2">
                                     <group string="Price">
-                                        <field name="ebay_suggesting_price" style="font-weight: bold;"  widget="monetary"  />
-                                        <field name="ebay_competition_price" style="font-weight: bold;" widget="monetary"  />
-                                        <field name="ebay_s_competitor" style="font-weight: bold;"  widget="monetary"  />
+                                        <field name="ebay_suggesting_price" style="font-weight: bold;"  widget="monetary"  options="{'currency_field': 'currency_id'}"/>
+                                        <field name="ebay_competition_price" style="font-weight: bold;" widget="monetary" options="{'currency_field': 'currency_id'}" />
+                                        <field name="ebay_s_competitor" style="font-weight: bold;"  widget="monetary" options="{'currency_field': 'currency_id'}" />
+                                        <field name="currency_id" invisible="1" />
                                     </group>
-                                    <group string="Configuration Price">
-                                        <field name="ebay_min_price"  widget="monetary"  />
-                                        <field name="ebay_max_price"  widget="monetary"  />
-                                    </group>
-                                </group>
-                            </pages>
-                            <pages string="Rule Configuration">
-                                <group colspan="2">
-                                    <group string="Suggest Configuration">
-                                        <!-- <field name="ebay_automated_accepting"/> -->
-                                        <field name="ebay_automated_suggesting"/>
-                                        <field name="ebay_interval_type"/>
-                                        <field name="ebay_interval_value" attrs="{'invisible': [('ebay_interval_type','in',('day','hour','30m'))] }"/>
-                                        <field name="ebay_next_call"/>
-                                        <field name="ebay_repricer" style="font-weight: bold;"/>
-                                        <field name="ebay_search_strategy" />
-                                        <field name="ebay_keyword" attrs="{'invisible': [('ebay_search_strategy','=','productId')] }"/>
-                                    </group>
-                                    <group string="Rouding">
-                                        <field name="ebay_automated_rouding"/>
-                                        <field name="ebay_rouding_strategy" attrs="{'invisible': [('ebay_automated_rouding','=',False)] }"/>
+                                    <group string="Range Price">
+                                        <field name="ebay_min_price"  widget="monetary" options="{'currency_field': 'currency_id'}" />
+                                        <field name="ebay_max_price"  widget="monetary" options="{'currency_field': 'currency_id'}" />
+                                        <field name="currency_id" invisible="1" />
                                     </group>
                                 </group>
                             </pages>
-                            <pages string="Product ID">
+                             <pages string="Product ID">
                                 <group>
                                     <field name="ebay_ePID"/>
                                     <field name="ebay_ISBN"/>
@@ -77,19 +61,43 @@
                                     <field name="ebay_EAN"/>
                                 </group>
                             </pages>
+                            <pages string="Configuration">
+                                <group colspan="2">
+                                    <group string="Suggest Configuration">
+                                        <!-- <field name="ebay_automated_accepting"/> -->
+                                        <field name="ebay_repricer" style="font-weight: bold;"/>
+                                        <field name="ebay_search_strategy" />
+                                        <field name="ebay_keyword" attrs="{'invisible': [('ebay_search_strategy','=','productId')] }"/>
+                                        <field name="ebay_automated_suggesting" />
+                                        <field name="ebay_interval_type"  attrs="{'invisible': [('ebay_automated_suggesting','=',False)] }"/>
+                                        <field name="ebay_interval_value" attrs="{'invisible': ['|',('ebay_interval_type','in',('day','hour','30m')),('ebay_automated_suggesting','=',False)] }"/>
+                                        <field name="ebay_next_call" attrs="{'invisible': [('ebay_automated_suggesting','=',False)] }"/>
+                                    </group>
+                                    <group string="Rounding">
+                                        <field name="ebay_automated_rouding"/>
+                                        <field name="ebay_rouding_strategy" attrs="{'invisible': [('ebay_automated_rouding','=',False)] }"/>
+                                    </group>
+                                </group>
+                            </pages>
                             <pages string="History">
                                 <field name="itemIDs">
                                     <tree default_order='create_date desc'>
                                         <field name="create_date"/>
-                                        <field name="price" widget="monetary"  />
-                                        <field name="s_competitor" widget="monetary"  />
-                                        <field name="min_price" widget="monetary"  />
-                                        <field name="max_price" widget="monetary"  />
+                                        <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}" />
+                                        <field name="my_competition" widget="monetary" options="{'currency_field': 'currency_id'}" />
+                                        <field name="s_competitor" widget="monetary" options="{'currency_field': 'currency_id'}" />
+                                        <field name="min_price" widget="monetary" options="{'currency_field': 'currency_id'}" />
+                                        <field name="max_price" widget="monetary" options="{'currency_field': 'currency_id'}" />
                                         <field name="search_type" />
+                                        <field name="currency_id" invisible="1" />
                                     </tree>
                                 </field>
 
                             </pages>
+<!--                            <pages string="Graph">-->
+<!--                                <field name="id" widget="basic_graph"></field>-->
+
+<!--                            </pages>-->
                         </notebook>
                     </sheet>
                     <footer>
@@ -119,7 +127,7 @@
 
                         </sheet>
                     </footer>
-                    <div class="oe_chatter">
+                    <div>
                         <field name="message_follower_ids" widget="mail_followers"/>
                         <field name="activity_ids" widget="mail_activity"/>
                         <field name="message_ids" widget="mail_thread"/>
@@ -138,12 +146,13 @@
                     <field name="ebay_category_id"/>
                     <field name="ebay_repricer"/>
                     <field name="ebay_search_strategy" />
-                    <field name="ebay_min_price" widget="monetary"/>
-                    <field name="ebay_max_price" widget="monetary"/>
-                    <field name="ebay_competition_price" widget="monetary"/>
+                    <field name="ebay_min_price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                    <field name="ebay_max_price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                    <field name="ebay_competition_price" widget="monetary"  options="{'currency_field': 'currency_id'}"/>
                     <!-- <field name="ebay_current_price"/> -->
-                    <field name="ebay_suggesting_price" widget="monetary"/>
-                    <field name="ebay_automated_suggesting" />
+                    <field name="ebay_suggesting_price" widget="monetary"  options="{'currency_field': 'currency_id'}"/>
+                    <field name="ebay_automated_suggesting" class="d-flex justify-content-center" />
+                    <field name="currency_id" invisible="1" />
                     <!-- <field name="ebay_automated_accepting" /> -->
                 </tree>
             </field>
@@ -160,8 +169,9 @@
                     <field name="ebay_category_id"/>
 
                     <!-- <field name="ebay_current_price"/> -->
-                    <field name="ebay_suggesting_price" widget="monetary"/>
+                    <field name="ebay_suggesting_price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                     <field name="ebay_automated_suggesting" />
+                    <field name="currency_id" invisible="1" />
                     <!-- <field name="ebay_automated_accepting" /> -->
 
                     <templates>
@@ -182,7 +192,7 @@ $</strong>
                                     </div> -->
                                     <div t-if="record.ebay_suggesting_price.value">
                                         <strong>
-                                            $<field name="ebay_suggesting_price" widget="monetary"/></strong>
+                                            <field name="ebay_suggesting_price" widget="monetary"/></strong>
                                     </div>
                                     <div t-if="record.ebay_automated_suggesting.raw_value">
                                         <span>Automated suggesting price</span>

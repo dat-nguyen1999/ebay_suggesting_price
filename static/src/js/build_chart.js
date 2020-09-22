@@ -8,14 +8,23 @@ var chart = new Chart(ctx, {
             {
                 label: 'Suggested Price',
                 data: [],
-                borderColor:  'rgb(0,191,185)',
+                borderColor:  'rgb(234,165,0)',
+                borderWidth : 5
 
             },
             {
-                label: 'Super Comeptition',     // vàng
+                label: 'Super Comeptition',     //
                 data: [],
-                borderColor:  'rgb(234,165,0)',
+                borderColor:  'rgb(0,127,84)',
+
             },
+            {
+                label: 'My Competition Price',
+                data: [],
+                borderColor:  'rgb(0,191,255)',
+
+            },
+
             {
                 label: 'Minimum Price',
                 data: [],
@@ -46,60 +55,15 @@ var chart = new Chart(ctx, {
             display: true,
             position: 'bottom',
             text: ''
-        }
+        },
 
 
-        ,
         scales: {
-            //  xAxes: [{
-            //      type: 'time',
-            //
-            //
-            //      // ticks: {
-            //      //     // callback: function(tickValue, index, ticks) {
-            //      //     //     if (!(index % parseInt(ticks.length / 5))) {
-            //      //     //       return moment.duration(tickValue/100, 's').format('YYYY-MM-DD hh:mm');
-            //      //     //     }
-            //      //     //   }
-            //      //
-            //      //     callback: function(value, index, values) {
-            //      //         //return moment(value,"YYYY-MM-DD hh:mm");
-            //      //         // console.log(value);
-            //      //         // console.log(index);
-            //      //         // console.log(values);
-            //      //         // return values[index].format("YYYY-MM-DD hh:mm");
-            //      //         if (!(index % 5)){
-            //      //             return moment(values[index].value).format("YYYY-MM-DD hh:mm");
-            //      //         }
-            //      //
-            //      //     }
-            //      // },
-            //      ticks: {
-            //    source: 'data'
-            // },
-            //
-            //
-            //      distribution: 'linear'
-            //  }],
-            //      xAxes: [{
-            //    type: 'time',
-            //    time: {
-            //       parser: 'HH:mm',
-            //       unit: 'minute',
-            //       displayFormats: {
-            //          minute: 'hh:mm'
-            //       },
-            //
-            //    },
-            //    ticks: {
-            //       source: 'labels'
-            //    }
-            // }],
             yAxes: [
                 {
                     ticks: {
                         callback: function (value, index, values) {
-                            return (value ? value.toString() : '') + '$'
+                            return '$'+(value ? value.toString() : '')
                         },
                         beginAtZero: false
                     }
@@ -138,10 +102,24 @@ async function get_history_price(id, chart, group_by="day") {
                         source: 'labels'
                     }
                 }];
+                chart.options.tooltips.callbacks.footer = function (tooltipItem){
+                    reason = json.reason[tooltipItem[0]['index']];
+                    if (reason != "" && tooltipItem[0]['datasetIndex'] == 0){
+                        return 'Reason:\n ' + json.reason[tooltipItem[0]['index']];
+                    }
+                }
+                chart.options.tooltips.bodyFontColor ='#D1F2EB'
                 chart.data.labels = json.label.map(parseDatetime);
             }
             else if (group_by === 'week'){
                 chart.options.scales.xAxes = []
+                chart.options.tooltips.callbacks.footer = function (tooltipItem){
+                    reason = json.reason[tooltipItem[0]['index']];
+                    if (reason && tooltipItem[0]['datasetIndex'] == 0){
+                        return 'Reason:\n ' + json.reason[tooltipItem[0]['index']];
+                    }
+                }
+                chart.options.tooltips.bodyFontColor ='#D1F2EB'
                 chart.data.labels = json.label;
             }
             else {
@@ -159,12 +137,20 @@ async function get_history_price(id, chart, group_by="day") {
                         source: 'labels'
                     }
                 }];
+                chart.options.tooltips.callbacks.footer = function (tooltipItem){
+                    reason = json.reason[tooltipItem[0]['index']];
+                    if (reason != "" && tooltipItem[0]['datasetIndex'] == 0){
+                        return 'Reason:\n' + json.reason[tooltipItem[0]['index']];
+                    }
+                }
+                chart.options.tooltips.bodyFontColor ='#D1F2EB'
                 chart.data.labels = json.label.map(parseDatetime);
             }
             chart.data.datasets[0].data = json.suggesting;
+            chart.data.datasets[2].data = json.my_competition;
             chart.data.datasets[1].data = json.super_competition;
-            chart.data.datasets[2].data = json.minimum_price;
-            chart.data.datasets[3].data = json.maximum_price;
+            chart.data.datasets[3].data = json.minimum_price;
+            chart.data.datasets[4].data = json.maximum_price;
             chart.update();
         }
     }
@@ -175,22 +161,28 @@ function parseDatetime(item){
     var datetime = new Date(item);
     return datetime;
 }
-console.log("123")
-get_history_price(parseInt(window.location.hash.split('&')[0].split('=')[1]), chart);
+console.log("456")
+
+function getId (){
+    var My_params = new URLSearchParams(window.location.href);
+    var id = My_params.get('id');
+    if (!id){
+        id = parseInt(window.location.hash.split('&')[0].split('=')[1]);
+    }
+    return id;
+}
+get_history_price(getId(), chart);
+
 $('#filter_chart').on('change', function() {
     group_by = $('#filter_chart')[0].value;
-    get_history_price(parseInt(window.location.hash.split('&')[0].split('=')[1]), chart, group_by);
+    get_history_price(getId(), chart, group_by);
 });
-// $('button').click( async function(e){
-//     chart.options.maintainAspectRatio = !chart.options.maintainAspectRatio;
-//     $('#myDiv').toggleClass('fullscreen');
-//     await chart.update();
-// });
-$('button').click(function(e){
+
+$('#btn_resize').click(function(e){
     chart.options.maintainAspectRatio = !chart.options.maintainAspectRatio;
     $('#myDiv').toggleClass('fullscreen');
     $('#btn_resize').toggleClass('fullscreen');
     setTimeout(function (){
-      chart.update();
-    },100);
+        chart.update();
+    },50);
 });

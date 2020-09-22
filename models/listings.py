@@ -56,6 +56,7 @@ class Listings(models.Model):
     ebay_title = fields.Char('Title', size=80,
                              help='The title is restricted to 80 characters', required=True)
     ebay_URL = fields.Html('URL', default='<p><br></p>')
+    # ebay_URL = fields.Char('URL')
     ebay_listing_image = fields.Image("Listing Image",attachment = True)
     ebay_category_id = fields.Many2one('ebay.category',
                                        string="Category",
@@ -70,12 +71,12 @@ class Listings(models.Model):
     # ebay_current_price = fields.Float('Current Price', readonly =True)
     ebay_suggesting_price = fields.Float('Suggested', readonly =True)
     ebay_competition_price = fields.Float('My Competition', readonly =True)
-    ebay_s_competitor = fields.Float("Super Competitor", readonly =True)
+    ebay_s_competitor = fields.Float("Super Competition", readonly =True)
     ebay_min_price = fields.Float('Minimum', required=True)
     ebay_max_price = fields.Float('Maximum', required=True)
 
     # ebay_automated_accepting = fields.Boolean("Automated Accepting", default = True)
-    ebay_automated_suggesting = fields.Boolean("Automated Suggesting", default = True)
+    ebay_automated_suggesting = fields.Boolean("Automated Suggestion", default = True)
     ebay_interval_type = fields.Selection([
         ('day', 'Every Day'),
         ('hour', 'Every Hour'),
@@ -102,21 +103,173 @@ class Listings(models.Model):
     ebay_instock = fields.Integer("In stock")
 
     itemIDs = fields.One2many("ebay_listing.item", "listId", readonly =True )    # , readonly =True
-    ebay_repricer = fields.Many2one("ebay_suggesting_rules","Repricing Rules")
+    ebay_repricer = fields.Many2one("ebay_suggesting_rules","Rule")
     competitionIDs = fields.One2many("competitions", "listingID", readonly =True )    # , readonly =True
     competition_count = fields.Integer(string='Competition Count', compute='_get_competition_count', readonly=True)
 
     # currency_id = fields.Many2one('res.currency', 'Currency',
     #                               default=lambda self: self.env.user.company_id.currency_id, required=True)
-    # currency_id = fields.Many2one('res.currency', 'Currency',
-    #                               default=2, required=True)
+    currency_id = fields.Many2one('res.currency', 'Currency',
+                                  default=2, required=True)
 
     ebay_automated_rouding = fields.Boolean("Automated Rounding", default=True)
     ebay_rouding_strategy = fields.Selection([
-        ('9', 'Price Nearest 9'),
-        ('.99', 'Price Nearest .99'),
-        ('.49', 'Price Nearest .49')
-    ], string='Rouding Strategy', default='.99', required=True)
+        ('9', 'Nearest 9'),
+        ('.99', 'Nearest .99'),
+        ('.49', 'Nearest .49')
+    ], string='Rounding Strategy', default='.99', required=True)
+
+    @api.model
+    def get_database_from_server(self, id, group_by = 'day'):
+        print("____________________________________________________________________")
+        model_name = "ebay_listing.item"
+        try:
+            print(id)
+            print(group_by)
+            labels = []
+            suggesting_price = []
+            super_competition = []
+            minimum_price = []
+            maximum_price = []
+            if group_by == 'day':
+                history_price = self.env["ebay_listing.item"].search(
+                    [
+                        ('listId', '=', int(id)),
+                        ('create_date', '>=',
+                         (datetime.now() - timedelta(hours=7)).replace(hour=0, minute=0, second=0,
+                                                                                         microsecond=0))
+                    ],
+                )
+                print(len(history_price))
+                for rec in history_price:
+                    if (rec.create_date + timedelta(hours=7)).date() >= datetime.now().date():
+                        print((rec.create_date + timedelta(hours=7)).date())
+                        labels.insert(0,
+                                      str((rec.create_date + timedelta(hours=7)).strftime("%Y-%m-%d %H:%M")))
+                        suggesting_price.insert(0, rec.price)
+                        super_competition.insert(0, rec.s_competitor)
+                        minimum_price.insert(0, rec.min_price)
+                        maximum_price.insert(0, rec.max_price)
+                    else:
+                        break
+
+            elif group_by == 'week':
+                thisweek = datetime.now().isocalendar()[1]
+                Convert_Day = {
+                    0: 'Monday',
+                    1: 'Tuesday',
+                    2: 'Wednesday',
+                    3: 'Thursday',
+                    4: 'Friday',
+                    5: 'Saturday',
+                    6: 'Sunday'
+                }
+                for i in range(0, 7):
+                    history_price = self.env["ebay_listing.item"].search(
+                        [
+                            ('listId', '=', int(id)),
+                            ('create_date', '>=',
+                             (datetime.now() - timedelta(hours=7)).replace(hour=0, minute=0, second=0,
+                                                                                             microsecond=0) - timedelta(
+                                 days=i)),
+                            ('create_date', '<=',
+                             (datetime.now() - timedelta(hours=7)).replace(hour=0, minute=0, second=0,
+                                                                                             microsecond=0) - timedelta(
+                                 days=i - 1))
+                        ],
+                    )
+                    print(len(history_price))
+                    if len(history_price) == 0:
+                        continue
+                    sum_suggesting_price = 0
+                    sum_super_competition = 0
+                    sum_minimum_price = 0
+                    sum_maximum_price = 0
+                    count = 0
+                    for rec in history_price:
+                        if (rec.create_date + timedelta(hours=7)).isocalendar()[1] == thisweek:
+                            sum_suggesting_price += rec.price
+                            sum_super_competition += rec.s_competitor
+                            sum_maximum_price += rec.max_price
+                            sum_minimum_price += rec.min_price
+                            count += 1
+                        else:
+                            break
+
+                    if count == 0:
+                        continue
+                    else:
+                        day = (datetime.now() - timedelta(days=i)).weekday()
+
+                        labels.insert(0, Convert_Day.get(day))
+                        suggesting_price.insert(0, round(float(sum_suggesting_price / count), 2))
+                        super_competition.insert(0, round(float(sum_super_competition / count), 2))
+                        minimum_price.insert(0, round(float(sum_minimum_price / count), 2))
+                        maximum_price.insert(0, round(float(sum_maximum_price / count), 2))
+                    # print(Convert_Day.get((datetime.datetime.now() - datetime.timedelta(days=i)).weekday()))
+
+            else:
+                thismonth = datetime.now().month
+                for i in range(0, 31):
+                    history_price = self.env["ebay_listing.item"].search(
+                        [
+                            ('listId', '=', int(id)),
+                            ('create_date', '>=',
+                             (datetime.now() - timedelta(hours=7)).replace(hour=0, minute=0, second=0,
+                                                                                             microsecond=0) - timedelta(
+                                 days=i)),
+                            ('create_date', '<=',
+                             (datetime.now() - timedelta(hours=7)).replace(hour=0, minute=0, second=0,
+                                                                                             microsecond=0) - timedelta(
+                                 days=i - 1))
+                        ],
+                    )
+                    if len(history_price) == 0:
+                        continue
+                    sum_suggesting_price = 0
+                    sum_super_competition = 0
+                    sum_minimum_price = 0
+                    sum_maximum_price = 0
+                    count = 0
+                    for rec in history_price:
+                        if (rec.create_date + timedelta(hours=7)).month == thismonth:
+                            sum_suggesting_price += rec.price
+                            sum_super_competition += rec.s_competitor
+                            sum_maximum_price += rec.max_price
+                            sum_minimum_price += rec.min_price
+                            count += 1
+                        else:
+                            break
+
+                    if count == 0:
+                        continue
+                    else:
+                        day = (datetime.now() - timedelta(days=i))
+                        print(day.strftime("%Y-%m-%d"))
+                        labels.insert(0, day.strftime("%Y-%m-%d"))
+                        suggesting_price.insert(0, round(float(sum_suggesting_price / count), 2))
+                        super_competition.insert(0, round(float(sum_super_competition / count), 2))
+                        minimum_price.insert(0, round(float(sum_minimum_price / count), 2))
+                        maximum_price.insert(0, round(float(sum_maximum_price / count), 2))
+                    # print(Convert_Day.get((datetime.datetime.now() - datetime.timedelta(days=i)).weekday()))
+
+            response = {
+                "label": labels,
+                "suggesting": suggesting_price,
+                "super_competition": super_competition,
+                "minimum_price": minimum_price,
+                "maximum_price": maximum_price
+
+            }
+        except Exception:
+            response = {
+                "status": "error",
+                "content": "not found"
+            }
+
+        return response
+
+        pass
 
     ################################################################################################
     ################### Functions ##################################################################
@@ -345,11 +498,14 @@ class Listings(models.Model):
     def _action_suggesting_price(self,rec):
         request = self.build_request(rec)
         try:
+            print(self.env['ebay.site'].search([('id', '=', int(self.env['ir.config_parameter'].sudo().get_param('ebay_site')))], limit=1).name)
+            print(self.env['ebay.site'].search([('id', '=', int(self.env['ir.config_parameter'].sudo().get_param('ebay_site')))], limit=1))
+            site = 'EBAY-US'
             ebay_api = Finding(
                 domain='svcs.ebay.com',
                 config_file=None,
                 appid= self.env['ir.config_parameter'].sudo().get_param('ebay_prod_app_id'),
-                siteid=self.env['ebay.site'].search([('id', '=', int(self.env['ir.config_parameter'].sudo().get_param('ebay_site')))], limit=1).name.split()[0],
+                siteid=self.env['ebay.site'].search([('id', '=', int(self.env['ir.config_parameter'].sudo().get_param('ebay_site')))], limit=1).name.split()[0] if not self.env['ebay.site'].search([('id', '=', int(self.env['ir.config_parameter'].sudo().get_param('ebay_site')))], limit=1).name else site,
                 https=True,
             )
             time.sleep(0.01)
@@ -396,10 +552,13 @@ class Listings(models.Model):
                         rec.itemIDs += self.env['ebay_listing.item'].create({
                             'price': suggesting_price,
                             #'current_price': rec.ebay_current_price,  # update in the future
+                            'my_competition': rec.ebay_competition_price,
                             's_competitor': super_competition_price,
                             'min_price' : rec.ebay_min_price,
                             'max_price' : rec.ebay_max_price,
-                            'search_type': dict(rec._fields['ebay_search_strategy'].selection).get(rec.ebay_search_strategy)
+                            'search_type': dict(rec._fields['ebay_search_strategy'].selection).get(rec.ebay_search_strategy),
+                            'rule': rec.ebay_repricer.rname,
+                            'keyword': rec.ebay_keyword
                         })
                         break
                     else:
@@ -439,7 +598,13 @@ class Listings(models.Model):
                         rec.itemIDs += self.env['ebay_listing.item'].create({
                             'price': suggesting_price,
                             #'current_price': rec.ebay_current_price,  # update in the future
-                            's_competitor': super_competition_price
+                            'my_competition': rec.ebay_competition_price,
+                            's_competitor': super_competition_price,
+                            'min_price' : rec.ebay_min_price,
+                            'max_price' : rec.ebay_max_price,
+                            'search_type': dict(rec._fields['ebay_search_strategy'].selection).get(rec.ebay_search_strategy),
+                            'rule': rec.ebay_repricer.rname,
+                            'keyword': rec.ebay_keyword
                         })
                         break
                     else:
@@ -501,9 +666,12 @@ class ListingItems(models.Model):
     listId = fields.Many2one("ebay_listing", "Listing Id", ondelete='cascade' )
     price = fields.Float("Suggesting Price" )
     # current_price = fields.Float("Current Price")
-    s_competitor = fields.Float("Super Competitor")
+    my_competition = fields.Float("My Competition")
+    s_competitor = fields.Float("Super Competition")
     min_price = fields.Float("Min Price")
     max_price = fields.Float("Max Price")
     search_type = fields.Char("Search Strategy")
+    keyword = fields.Char("Keyword")
+    rule = fields.Char("Rule")
     currency_id = fields.Many2one('res.currency', 'Currency',
                                   default=2, required=True)

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "ebay suggesting pricer v1.0", #tên module
-    'summary': """ebay suggesting repricer v1.0""",  #mô tả ngắn gọn module
-    'description': """ebay suggesting repricer ver 1.0""",  #mô tả chi tiết app module / tính năng
+    'name': "ebay suggest pricer v1.0", #tên module
+    'summary': """ebay suggest pricer v1.0""",  #mô tả ngắn gọn module
+    'description': """ebay suggest pricer ver 1.0""",  #mô tả chi tiết app module / tính năng
     'author': "tiendat",    # tác giả, bạn có thể để tên của bản thân -DAT
     'website': "https://tiendat.info",  #website chứa thêm thông tin của module
     'category': 'Uncategorized',    # loại module

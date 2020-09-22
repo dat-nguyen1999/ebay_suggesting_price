@@ -44,7 +44,7 @@ class Suggesting_Rules(models.Model):
     ebay_suggesting_strategy = fields.Selection([
         ('matching', 'Matching'),
         ('below', 'Below'),
-        ('above', 'Above'),], string='Suggesting Strategy', default='below', required = True)
+        ('above', 'Above'),], string='Strategy', default='below', required = True)
     ebay_amount_type = fields.Selection([
         ('%','Percentage'),
         ('$','Amount')], string='Type', default='$', required = True)
@@ -135,5 +135,8 @@ class Suggesting_Rules(models.Model):
         ])
         if query:
             raise ValidationError("Rules has existed !")
-        rec = super(Suggesting_Rules, self).write(vals)      
-        return rec
+        res = super(Suggesting_Rules, rec).write(vals)
+        print(vals)
+        print(res)
+        print(self.browse(rec_id).ebay_amount_value)
+        return res

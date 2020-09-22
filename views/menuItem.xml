@@ -14,7 +14,7 @@
 <!--        </record>-->
         <menuitem
                 id="ebay_suggesting_price_menu_root"
-                name="eBay Suggesting Price"
+                name="eBay Suggest Price"
                 web_icon="ebay_pricer_1,static/description/icon.png"
                 groups="base.group_user"
         />
